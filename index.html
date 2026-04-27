@@ -132,10 +132,16 @@
         </button>
         
         <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: none; min-width: 250px;" aria-labelledby="userDropdown">
-          <li>
-            <div class="dropdown-item-text px-4 py-3 border-bottom" style="background: linear-gradient(135deg, #1a5778, #007bff); color: white;">
+          <li id="guestLoginLi">
+            <button class="dropdown-item px-4 py-3 border-bottom" style="background: linear-gradient(135deg, #1a5778, #007bff); color: white; text-align: left; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#loginModal">
               <strong id="userNameDisplay">Guest</strong><br>
-              <small id="userEmailDisplay" class="opacity-75">Please login</small>
+              <small id="userEmailDisplay" class="opacity-75">Click to login</small>
+            </button>
+          </li>
+          <li id="userInfoLi" style="display: none;">
+            <div class="dropdown-item-text px-4 py-3 border-bottom" style="background: linear-gradient(135deg, #1a5778, #007bff); color: white;">
+              <strong id="userNameDisplay2">User</strong><br>
+              <small id="userEmailDisplay2" class="opacity-75">Logged in</small>
             </div>
           </li>
           <li><hr class="dropdown-divider"></li>
@@ -143,7 +149,7 @@
             <span class="dropdown-item-text px-4 py-2 text-muted small">Cart is empty</span>
           </li>
           <li><hr class="dropdown-divider"></li>
-          <li>
+          <li id="viewCartLi">
             <button class="dropdown-item fw-bold text-primary" onclick="openCart()">
               <i class="fas fa-shopping-cart me-2"></i>View Cart
             </button>
@@ -166,10 +172,21 @@
   <hr>
 
   <div class="d-grid gap-3 mt-4">
-    <button class="btn btn-primary rounded-pill" onclick="scrollToForm()">Create Event</button>
-    <button class="btn btn-primary rounded-pill" onclick="window.location.href='shop.html'">Shop</button>
-    <button class="btn btn-outline-light rounded-pill">Task Bar</button>
-    <button class="btn btn-dark rounded-pill" data-bs-toggle="modal" data-bs-target="#loginModal">Log in/Sign-up</button>
+    <button class="btn btn-primary rounded-pill" onclick="window.location.href='about.html'">
+      About
+    </button>
+    <button class="btn btn-primary rounded-pill" onclick="window.location.href='shop.html'">
+      Shop
+    </button>
+    <button class="btn btn-primary rounded-pill" onclick="scrollToForm()">
+      Create Event
+    </button>
+    <button class="btn btn-primary rounded-pill" onclick="window.location.href='Task.html'">
+      Officers Task
+    </button>
+    <button class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#loginModal" onclick="toggleSidebar()">
+      Log in/Sign-up
+    </button>
   </div>
 </div>
 <section class="hero text-white text-center">
@@ -241,13 +258,55 @@
     </div>
   </div>
 </section>
-<div class="modal fade" id="loginModal">
-  <div class="modal-dialog">
-    <div class="modal-content p-3">
-      <h5>Login</h5>
-      <input class="form-control mb-2" placeholder="Email">
-      <input type="password" class="form-control mb-2" placeholder="Password">
-      <button class="btn btn-primary w-100">Login</button>
+<div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+      <div class="modal-header" style="border: none; padding: 30px 40px 0;">
+        <h4 class="modal-title w-100 text-center fw-bold" style="color: #1a5778;">Welcome to CampusShop</h4>
+      </div>
+      <div class="modal-body p-0">
+        <div id="loginTab" class="tab-pane active p-4">
+          <form id="loginForm">
+            <div class="mb-4">
+              <label class="form-label fw-bold">Email</label>
+              <input type="email" class="form-control login-input" id="loginEmail" placeholder="your@email.com" required>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-bold">Password</label>
+              <input type="password" class="form-control login-input" id="loginPassword" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold login-btn mb-3">Sign In</button>
+            <div class="text-center">
+              <small class="text-muted">Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a></small>
+            </div>
+          </form>
+        </div>
+        
+        <div id="signupTab" class="tab-pane p-4" style="display: none;">
+          <form id="signupForm">
+            <div class="mb-4">
+              <label class="form-label fw-bold">Full Name</label>
+              <input type="text" class="form-control login-input" id="signupName" placeholder="John Doe" required>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-bold">Email</label>
+              <input type="email" class="form-control login-input" id="signupEmail" placeholder="your@email.com" required>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-bold">Password</label>
+              <input type="password" class="form-control login-input" id="signupPassword" placeholder="••••••••" required>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-bold">Confirm Password</label>
+              <input type="password" class="form-control login-input" id="signupConfirmPassword" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100 fw-bold login-btn mb-3">Create Account</button>
+            <div class="text-center">
+              <small class="text-muted">Already have an account? <a href="#" onclick="showLogin()">Sign In</a></small>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -344,58 +403,7 @@ function editEvent(i) {
 
 renderEvents();
 </script>
-<div class="modal fade" id="authModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-      <div class="modal-header" style="border: none; padding: 30px 40px 0;">
-        <h4 class="modal-title w-100 text-center fw-bold" style="color: #1a5778;">Welcome to CampusShop</h4>
-      </div>
-      <div class="modal-body p-0">
-        <div id="loginTab" class="tab-pane active p-4">
-          <form id="loginForm">
-            <div class="mb-4">
-              <label class="form-label fw-bold">Email</label>
-              <input type="email" class="form-control login-input" id="loginEmail" placeholder="your@email.com" required>
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-bold">Password</label>
-              <input type="password" class="form-control login-input" id="loginPassword" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100 fw-bold login-btn mb-3">Sign In</button>
-            <div class="text-center">
-              <small class="text-muted">Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a></small>
-            </div>
-          </form>
-        </div>
-        
-        <div id="signupTab" class="tab-pane p-4" style="display: none;">
-          <form id="signupForm">
-            <div class="mb-4">
-              <label class="form-label fw-bold">Full Name</label>
-              <input type="text" class="form-control login-input" id="signupName" placeholder="John Doe" required>
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-bold">Email</label>
-              <input type="email" class="form-control login-input" id="signupEmail" placeholder="your@email.com" required>
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-bold">Password</label>
-              <input type="password" class="form-control login-input" id="signupPassword" placeholder="••••••••" required>
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-bold">Confirm Password</label>
-              <input type="password" class="form-control login-input" id="signupConfirmPassword" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn btn-success w-100 fw-bold login-btn mb-3">Create Account</button>
-            <div class="text-center">
-              <small class="text-muted">Already have an account? <a href="#" onclick="showLogin()">Sign In</a></small>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <style>
 .login-input {
@@ -431,7 +439,7 @@ renderEvents();
   background: linear-gradient(45deg, #28a745, #20c997) !important;
 }
 
-#authModal .modal-content {
+#loginModal .modal-content {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
@@ -467,19 +475,13 @@ renderEvents();
 let currentUser = null;
 const users = JSON.parse(localStorage.getItem('users')) || {};
 
-// Check if user is logged in
-if (!currentUser && !sessionStorage.getItem('isAuthenticated')) {
-    // Show login modal immediately
-    document.addEventListener('DOMContentLoaded', function() {
-        new bootstrap.Modal(document.getElementById('authModal'), {
-            backdrop: 'static',
-            keyboard: false
-        }).show();
-    });
-} else {
-    currentUser = sessionStorage.getItem('currentUser');
-    showUserInfo();
-}
+// Check if user is logged in on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (sessionStorage.getItem('isAuthenticated')) {
+        currentUser = sessionStorage.getItem('currentUser');
+        showUserInfo();
+    }
+});
 
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -490,9 +492,10 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         currentUser = email;
         sessionStorage.setItem('isAuthenticated', 'true');
         sessionStorage.setItem('currentUser', email);
-        bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        if (modal) modal.hide();
         showUserInfo();
-        updateStockDisplay(); // Refresh stock
+        document.getElementById('loginForm').reset();
     } else {
         alert('❌ Invalid email or password!');
     }
@@ -515,15 +518,17 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
         return;
     }
     
-    users[email] = { name, password };
+    users[email] = { name, password, email };
     localStorage.setItem('users', JSON.stringify(users));
     
     currentUser = email;
     sessionStorage.setItem('isAuthenticated', 'true');
     sessionStorage.setItem('currentUser', email);
-    bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+    if (modal) modal.hide();
     showUserInfo();
-    updateStockDisplay();
+    document.getElementById('signupForm').reset();
+    showLogin(); // Switch back to login tab
 });
 
 function showSignup() {
@@ -538,28 +543,47 @@ function showLogin() {
 
 function showUserInfo() {
     if (currentUser) {
-        const userInfo = document.createElement('div');
-        userInfo.className = 'user-info';
-        userInfo.innerHTML = `
-            👋 Hi, ${users[currentUser]?.name || currentUser} 
-            <button class="logout-btn ms-2" onclick="logout()">Logout</button>
-        `;
-        document.body.appendChild(userInfo);
+        // Hide guest login button, show user info
+        document.getElementById('guestLoginLi').style.display = 'none';
+        document.getElementById('userInfoLi').style.display = 'block';
+        document.getElementById('userNameDisplay2').textContent = users[currentUser]?.name || currentUser;
+        document.getElementById('userEmailDisplay2').textContent = users[currentUser]?.email || currentUser;
+        
+        // Show logout button
+        document.getElementById('logoutLi').style.display = 'block';
+        
+        // Also remove the fixed user-info div if it exists
+        const existingInfo = document.querySelector('.user-info');
+        if (existingInfo) existingInfo.remove();
     }
 }
 
 function logout() {
     currentUser = null;
     sessionStorage.clear();
+    
+    // Reset dropdown to show guest login
+    document.getElementById('guestLoginLi').style.display = 'block';
+    document.getElementById('userInfoLi').style.display = 'none';
+    document.getElementById('logoutLi').style.display = 'none';
+    
     location.reload();
 }
 
 function checkAuth() {
     if (!sessionStorage.getItem('isAuthenticated')) {
-        new bootstrap.Modal(document.getElementById('authModal')).show();
+        new bootstrap.Modal(document.getElementById('loginModal')).show();
         return false;
     }
     return true;
+}
+
+function openCart() {
+    // Placeholder for cart functionality
+    if (checkAuth()) {
+        // Navigate to cart page or show cart modal
+        alert('Cart functionality coming soon!');
+    }
 }
 
 document.addEventListener('click', function(e) {

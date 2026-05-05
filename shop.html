@@ -5,6 +5,7 @@
 <title>PUP Merchandise</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <style>
 body { margin:0; font-family: Arial; background:#0f172a; }
@@ -190,6 +191,116 @@ padding:2px 6px;
     color: #dc3545;
     font-size: 24px;
 }
+
+.checkout-btn {
+    background: linear-gradient(135deg, #1a5778, #007bff);
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 12px;
+    width: 100%;
+    margin-top: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.03em;
+    box-shadow: 0 8px 24px rgba(26, 87, 120, 0.45);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.checkout-btn:hover:not(:disabled) {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 123, 255, 0.4);
+}
+
+.checkout-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#checkoutModal .modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+#checkoutModal .modal-header {
+    background: linear-gradient(135deg, #1a5778 0%, #0b2a4a 100%);
+    color: white;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+#checkoutModal .modal-body {
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+    padding: 1.25rem;
+}
+
+.checkout-section {
+    border: 1px solid rgba(26, 87, 120, 0.18);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.checkout-section .lbl {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1a5778;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.65rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.shop-pay-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+}
+
+@media (min-width: 480px) {
+    .shop-pay-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.shop-pay-grid input { position: absolute; opacity: 0; pointer-events: none; }
+
+.shop-pay-grid label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.55rem 0.35rem;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #495057;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    text-align: center;
+    min-height: 3.9rem;
+    margin: 0;
+}
+
+.shop-pay-grid label i { color: #1a5778; font-size: 1.05rem; }
+
+.shop-pay-grid input:checked + label {
+    border-color: #1a5778;
+    background: rgba(26, 87, 120, 0.1);
+    color: #0b2a4a;
+}
+
+#checkoutModal .form-control,
+#checkoutModal .form-select {
+    border-radius: 10px;
+}
 </style>
 </head>
 
@@ -200,8 +311,8 @@ padding:2px 6px;
     <a class="navbar-brand fw-bold">PUP Merchandise</a>
 
     <div class="ms-auto position-relative">
-      <button class="btn btn-light" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
-        🛒 <span id="cartCount" class="cart-badge">0</span>
+      <button class="btn btn-light position-relative pe-3" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
+        🛒 <span class="cart-badge js-cart-count">0</span>
       </button>
     </div>
 
@@ -379,7 +490,7 @@ padding:2px 6px;
 </div>
 <div class="offcanvas offcanvas-end" id="cartCanvas" style="width: 400px;">
   <div class="offcanvas-header">
-    <h5>Your Cart (<span id="cartCount">0</span>)</h5>
+    <h5 class="mb-0">Your Cart (<span class="js-cart-count">0</span>)</h5>
     <button class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body" style="max-height: 70vh; overflow-y: auto; padding: 20px;">
@@ -389,6 +500,91 @@ padding:2px 6px;
       <div class="d-flex justify-content-between align-items-center">
         <span>Total:</span>
         <strong>₱<span id="total">0</span></strong>
+      </div>
+    </div>
+    <button type="button" id="checkoutBtn" class="checkout-btn" disabled>Place order</button>
+    <p class="small text-white-50 text-center mt-2 mb-0 opacity-75">Add items to cart, then confirm address &amp; payment.</p>
+  </div>
+</div>
+
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="checkoutModalLabel">
+          <i class="fas fa-bag-shopping"></i> Checkout
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="checkoutForm">
+          <div class="checkout-section">
+            <div class="lbl"><i class="fas fa-truck"></i> Delivery address</div>
+            <input type="text" class="form-control mb-2" id="chkFullName" placeholder="Full name" required autocomplete="name">
+            <input type="tel" class="form-control mb-2" id="chkPhone" placeholder="Mobile (09xx)" required autocomplete="tel">
+            <label class="form-label small text-muted mb-1">Campus / pick-up branch</label>
+            <select class="form-select mb-2" id="chkCampus" required>
+              <option value="">Select campus</option>
+              <option>PUP Sta. Mesa</option>
+              <option>PUP Taguig</option>
+              <option>PUP Quezon City</option>
+              <option>PUP San Juan</option>
+              <option>PUP Parañaque</option>
+              <option>PUP Bataan</option>
+              <option>PUP Bulacan</option>
+              <option>PUP Nueva Ecija</option>
+              <option>PUP Cavite</option>
+              <option>PUP Laguna</option>
+              <option>PUP Sto. Tomas</option>
+              <option>PUP Talisay</option>
+              <option>PUP Lopez</option>
+              <option>PUP Mindoro</option>
+              <option>PUP Ragay</option>
+              <option>PUP Maragondon</option>
+            </select>
+            <textarea class="form-control mb-2" id="chkAddress" rows="2" placeholder="Street, building, unit, landmark" required autocomplete="street-address"></textarea>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <input type="text" class="form-control" id="chkCity" placeholder="City / municipality" required>
+              </div>
+              <div class="col-md-6">
+                <input type="text" class="form-control" id="chkProvince" placeholder="Province" required>
+              </div>
+            </div>
+            <input type="text" class="form-control mt-2" id="chkPostal" placeholder="Postal code (optional)" maxlength="10">
+          </div>
+          <div class="checkout-section mb-0">
+            <div class="lbl"><i class="fas fa-wallet"></i> Payment method</div>
+            <div class="shop-pay-grid" role="group">
+              <div>
+                <input type="radio" name="shopPayment" id="spCod" value="Cash on delivery" required>
+                <label for="spCod"><i class="fas fa-hand-holding-dollar"></i>COD</label>
+              </div>
+              <div>
+                <input type="radio" name="shopPayment" id="spGcash" value="GCash">
+                <label for="spGcash"><i class="fas fa-mobile-screen"></i>GCash</label>
+              </div>
+              <div>
+                <input type="radio" name="shopPayment" id="spMaya" value="Maya">
+                <label for="spMaya"><i class="fas fa-credit-card"></i>Maya</label>
+              </div>
+              <div>
+                <input type="radio" name="shopPayment" id="spBank" value="Bank transfer">
+                <label for="spBank"><i class="fas fa-building-columns"></i>Bank</label>
+              </div>
+              <div>
+                <input type="radio" name="shopPayment" id="spCard" value="Card">
+                <label for="spCard"><i class="fas fa-wallet"></i>Card</label>
+              </div>
+              <div>
+                <input type="radio" name="shopPayment" id="spGrab" value="GrabPay">
+                <label for="spGrab"><i class="fas fa-motorcycle"></i>GrabPay</label>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="checkout-btn mt-3 mb-1">Confirm order</button>
+          <p class="small text-muted text-center mb-0">Demo checkout — order details are not sent to a server.</p>
+        </form>
       </div>
     </div>
   </div>
@@ -454,9 +650,9 @@ function updateStockDisplay() {
 function updateCart(){
     let cartItems = document.getElementById("cartItems");
     let total = 0;
-    let cartCount = document.getElementById("cartCount");
     let clearBtn = document.getElementById("clearAllBtn");
     let totalEl = document.getElementById("total");
+    let checkoutBtn = document.getElementById("checkoutBtn");
     
     cartItems.innerHTML = "";
 
@@ -483,8 +679,9 @@ function updateCart(){
     });
 
     totalEl.innerText = total.toLocaleString();
-    cartCount.innerText = cart.length;
+    document.querySelectorAll(".js-cart-count").forEach(el => { el.textContent = cart.length; });
     clearBtn.style.display = cart.length > 0 ? 'block' : 'none';
+    if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
 }
 
 
@@ -563,11 +760,12 @@ document.querySelectorAll(".addCart").forEach(btn=>{
         
         updateStockDisplay();
         
+        const sizeEl = card.querySelector(".size");
         cart.push({
             name: productName,
             price: parseInt(this.dataset.price),
             qty: qty,
-            size: card.querySelector(".size").value
+            size: sizeEl ? sizeEl.value : "Default"
         });
 
         updateCart();
@@ -582,6 +780,114 @@ document.querySelectorAll(".buyNow").forEach(btn=>{
     }
 });
 
+const CHECKOUT_PREFS_KEY = "shopCheckoutPrefs";
+
+function loadCheckoutPrefs() {
+    try {
+        const raw = localStorage.getItem(CHECKOUT_PREFS_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+}
+
+function saveCheckoutPrefs(p) {
+    localStorage.setItem(CHECKOUT_PREFS_KEY, JSON.stringify(p));
+}
+
+function applyCheckoutPrefsToForm() {
+    const p = loadCheckoutPrefs();
+    const ids = ["chkFullName","chkPhone","chkCampus","chkAddress","chkCity","chkProvince","chkPostal"];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && p[id]) el.value = p[id];
+    });
+    if (p.shopPayment) {
+        document.querySelectorAll('input[name="shopPayment"]').forEach(r => { r.checked = r.value === p.shopPayment; });
+    }
+    if (p.chkCampus) applyCampusAddress(p.chkCampus);
+}
+
+const campusAddressMap = {
+    "PUP Sta. Mesa": { city: "Manila", province: "Metro Manila", postalCode: "1016" },
+    "PUP Taguig": { city: "Taguig City", province: "Metro Manila", postalCode: "1630" },
+    "PUP Quezon City": { city: "Quezon City", province: "Metro Manila", postalCode: "1100" },
+    "PUP San Juan": { city: "San Juan City", province: "Metro Manila", postalCode: "1500" },
+    "PUP Parañaque": { city: "Parañaque City", province: "Metro Manila", postalCode: "1700" },
+    "PUP Bataan": { city: "Balanga", province: "Bataan", postalCode: "2100" },
+    "PUP Bulacan": { city: "Malolos", province: "Bulacan", postalCode: "3000" },
+    "PUP Nueva Ecija": { city: "Cabanatuan", province: "Nueva Ecija", postalCode: "3100" },
+    "PUP Cavite": { city: "Maragondon", province: "Cavite", postalCode: "4112" },
+    "PUP Laguna": { city: "Santa Cruz", province: "Laguna", postalCode: "4009" },
+    "PUP Sto. Tomas": { city: "Sto. Tomas City", province: "Batangas", postalCode: "4234" },
+    "PUP Talisay": { city: "Talisay", province: "Batangas", postalCode: "4220" },
+    "PUP Lopez": { city: "Lopez", province: "Quezon", postalCode: "4316" },
+    "PUP Mindoro": { city: "Calapan", province: "Oriental Mindoro", postalCode: "5200" },
+    "PUP Ragay": { city: "Ragay", province: "Camarines Sur", postalCode: "4410" },
+    "PUP Maragondon": { city: "Maragondon", province: "Cavite", postalCode: "4112" }
+};
+
+const campusSelect = document.getElementById("chkCampus");
+const campusCity = document.getElementById("chkCity");
+const campusProvince = document.getElementById("chkProvince");
+const campusPostal = document.getElementById("chkPostal");
+
+function applyCampusAddress(campusValue) {
+    const address = campusAddressMap[campusValue];
+    if (address) {
+        campusCity.value = address.city;
+        campusProvince.value = address.province;
+        campusPostal.value = address.postalCode;
+    } else {
+        campusCity.value = "";
+        campusProvince.value = "";
+        campusPostal.value = "";
+    }
+}
+
+if (campusSelect) {
+    campusSelect.addEventListener("change", function() {
+        applyCampusAddress(this.value);
+    });
+}
+
+document.getElementById("checkoutBtn").addEventListener("click", function() {
+    if (cart.length === 0) return;
+    applyCheckoutPrefsToForm();
+    const oc = bootstrap.Offcanvas.getInstance(document.getElementById("cartCanvas"));
+    if (oc) oc.hide();
+    new bootstrap.Modal(document.getElementById("checkoutModal")).show();
+});
+
+document.getElementById("checkoutForm").addEventListener("submit", function(ev) {
+    ev.preventDefault();
+    const pay = document.querySelector('input[name="shopPayment"]:checked');
+    const prefs = {
+        chkFullName: document.getElementById("chkFullName").value.trim(),
+        chkPhone: document.getElementById("chkPhone").value.trim(),
+        chkCampus: document.getElementById("chkCampus").value,
+        chkAddress: document.getElementById("chkAddress").value.trim(),
+        chkCity: document.getElementById("chkCity").value.trim(),
+        chkProvince: document.getElementById("chkProvince").value.trim(),
+        chkPostal: document.getElementById("chkPostal").value.trim(),
+        shopPayment: pay ? pay.value : ""
+    };
+    saveCheckoutPrefs(prefs);
+
+    const total = document.getElementById("total").innerText;
+    const summary = [
+        "Order placed (demo).",
+        "Payment: " + prefs.shopPayment,
+        "Ship to: " + prefs.chkAddress + ", " + prefs.chkCity + ", " + prefs.chkProvince,
+        "Total: ₱" + total
+    ].join("\n");
+
+    cart = [];
+    updateCart();
+    updateStockDisplay();
+
+    const modalInst = bootstrap.Modal.getInstance(document.getElementById("checkoutModal"));
+    if (modalInst) modalInst.hide();
+    alert(summary);
+});
 
 updateStockDisplay();
 </script>

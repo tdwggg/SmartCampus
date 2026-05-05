@@ -90,6 +90,79 @@
   z-index: 9999;
   backdrop-filter: blur(10px);
 }
+
+    .market-card-section {
+      border: 1px solid rgba(26, 87, 120, 0.2);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(180deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+    }
+
+    .market-card-section .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1a5778;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .market-card-section .section-title i {
+      opacity: 0.9;
+    }
+
+    .payment-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+
+    @media (min-width: 576px) {
+      .payment-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .payment-grid input { position: absolute; opacity: 0; pointer-events: none; }
+
+    .payment-grid label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.65rem 0.4rem;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #495057;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      text-align: center;
+      min-height: 4.25rem;
+    }
+
+    .payment-grid label i { font-size: 1.15rem; color: #1a5778; }
+
+    .payment-grid input:focus-visible + label {
+      outline: 2px solid #1a5778;
+      outline-offset: 2px;
+    }
+
+    .payment-grid input:checked + label {
+      border-color: #1a5778;
+      background: rgba(26, 87, 120, 0.08);
+      box-shadow: 0 0 0 1px rgba(26, 87, 120, 0.25);
+      color: #0b2a4a;
+    }
+
+    #eventForm .form-control,
+    #eventForm .form-select {
+      border-radius: 10px;
+    }
   </style>
 </head>
 
@@ -217,42 +290,97 @@
 
         <form id="eventForm" class="card p-4 shadow">
 
-          <input type="text" id="firstName" class="form-control mb-2" placeholder="First Name" required>
-          <input type="text" id="middleName" class="form-control mb-2" placeholder="Middle Name (optional)">
-          <input type="text" id="lastName" class="form-control mb-2" placeholder="Last Name" required>
-          <input type="date" id="date" class="form-control mb-2" required>
+          <div class="market-card-section">
+            <div class="section-title"><i class="fas fa-user"></i> Organizer</div>
+            <input type="text" id="firstName" class="form-control mb-2" placeholder="First Name" required>
+            <input type="text" id="middleName" class="form-control mb-2" placeholder="Middle Name (optional)">
+            <input type="text" id="lastName" class="form-control mb-2" placeholder="Last Name" required>
+            <input type="tel" id="eventPhone" class="form-control mb-2" placeholder="Mobile number (09xx)" required pattern="[0-9+\s\-]{10,}" title="Enter a valid mobile number">
+            <input type="date" id="date" class="form-control mb-0" required>
+          </div>
 
-          <select id="location" class="form-select mb-2" required>
-            <option value="">Select Location</option>
-            <option>PUP Sta. Mesa</option>
-            <option>PUP Taguig</option>
-            <option>PUP Quezon City</option>
-            <option>PUP San Juan</option>
-            <option>PUP Parañaque</option>
-            <option>PUP Bataan</option>
-            <option>PUP Bulacan</option>
-            <option>PUP Nueva Ecija</option>
-            <option>PUP Cavite</option>
-            <option>PUP Laguna</option>
-            <option>PUP Sto. Tomas</option>
-            <option>PUP Talisay</option>
-            <option>PUP Lopez</option>
-            <option>PUP Mindoro</option>
-            <option>PUP Ragay</option>
-            <option>PUP Maragondon</option>
-          </select>
+          <div class="market-card-section">
+            <div class="section-title"><i class="fas fa-location-dot"></i> Venue &amp; address</div>
+            <label class="form-label small text-muted mb-1">Campus / branch</label>
+            <select id="eventCampus" class="form-select mb-2" required>
+              <option value="">Select campus</option>
+              <option>PUP Sta. Mesa</option>
+              <option>PUP Taguig</option>
+              <option>PUP Quezon City</option>
+              <option>PUP San Juan</option>
+              <option>PUP Parañaque</option>
+              <option>PUP Bataan</option>
+              <option>PUP Bulacan</option>
+              <option>PUP Nueva Ecija</option>
+              <option>PUP Cavite</option>
+              <option>PUP Laguna</option>
+              <option>PUP Sto. Tomas</option>
+              <option>PUP Talisay</option>
+              <option>PUP Lopez</option>
+              <option>PUP Mindoro</option>
+              <option>PUP Ragay</option>
+              <option>PUP Maragondon</option>
+            </select>
+            <label class="form-label small text-muted mb-1">Street, building, room / landmark</label>
+            <textarea id="eventAddressLine" class="form-control mb-2" rows="2" placeholder="e.g. Building N, Room 301, near library" required></textarea>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label small text-muted mb-1">City / municipality</label>
+                <input type="text" id="eventCity" class="form-control" placeholder="City or municipality" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted mb-1">Province</label>
+                <input type="text" id="eventProvince" class="form-control" placeholder="Province" required>
+              </div>
+            </div>
+            <label class="form-label small text-muted mb-1 mt-2">Postal code <span class="fw-normal">(optional)</span></label>
+            <input type="text" id="eventPostal" class="form-control" placeholder="ZIP" maxlength="10">
+          </div>
 
-          <select id="type" class="form-select mb-2" required>
-            <option value="">Type of Event</option>
-            <option>Campus Event</option>
-            <option>Organizational Event</option>
-            <option>Outreach</option>
-            <option>Departmental Event</option>
-          </select>
+          <div class="market-card-section">
+            <div class="section-title"><i class="fas fa-wallet"></i> Payment method</div>
+            <p class="small text-muted mb-2 mb-md-3">How fees or materials will be settled (demo — like Shopee / Lazada checkout).</p>
+            <div class="payment-grid" role="group" aria-label="Payment method">
+              <div>
+                <input type="radio" name="eventPayment" id="payCod" value="Cash on delivery / day" required>
+                <label for="payCod"><i class="fas fa-hand-holding-dollar"></i><span>COD / pay on day</span></label>
+              </div>
+              <div>
+                <input type="radio" name="eventPayment" id="payGcash" value="GCash">
+                <label for="payGcash"><i class="fas fa-mobile-screen"></i><span>GCash</span></label>
+              </div>
+              <div>
+                <input type="radio" name="eventPayment" id="payMaya" value="Maya">
+                <label for="payMaya"><i class="fas fa-credit-card"></i><span>Maya</span></label>
+              </div>
+              <div>
+                <input type="radio" name="eventPayment" id="payBank" value="Bank transfer">
+                <label for="payBank"><i class="fas fa-building-columns"></i><span>Bank transfer</span></label>
+              </div>
+              <div>
+                <input type="radio" name="eventPayment" id="payCard" value="Debit / credit card">
+                <label for="payCard"><i class="fas fa-wallet"></i><span>Card</span></label>
+              </div>
+              <div>
+                <input type="radio" name="eventPayment" id="payGrab" value="GrabPay">
+                <label for="payGrab"><i class="fas fa-motorcycle"></i><span>GrabPay</span></label>
+              </div>
+            </div>
+          </div>
 
-          <input type="email" id="email" class="form-control mb-3" placeholder="Email" required>
+          <div class="market-card-section">
+            <div class="section-title"><i class="fas fa-calendar-check"></i> Event details</div>
+            <select id="type" class="form-select mb-2" required>
+              <option value="">Type of Event</option>
+              <option>Campus Event</option>
+              <option>Organizational Event</option>
+              <option>Outreach</option>
+              <option>Departmental Event</option>
+            </select>
+            <input type="email" id="email" class="form-control mb-0" placeholder="Email" required>
+          </div>
 
-          <button class="btn btn-primary w-100">Create Event</button>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="border-radius: 12px;">Create Event</button>
         </form>
       </div>
     </div>
@@ -339,14 +467,19 @@ function renderEvents() {
     const li = document.createElement("li");
     li.className = "list-group-item";
 
+    const campus = e.campus || e.location || "";
+    const pay = e.paymentMethod || "—";
+    const addr = e.addressLine ? `${e.addressLine}` : "";
     li.innerHTML = `
-  <div class="d-flex justify-content-between align-items-center">
+  <div class="d-flex justify-content-between align-items-start gap-2">
     <div>
       <strong>${e.type}</strong><br>
-      <small>📅 ${e.date}</small>
+      <small class="text-muted">📅 ${e.date}</small><br>
+      <small class="text-muted">📍 ${campus}${addr ? " · " + addr.replace(/</g, "") : ""}</small><br>
+      <small class="text-muted">💳 ${pay}</small>
     </div>
 
-    <div>
+    <div class="flex-shrink-0">
       <button class="btn btn-sm btn-warning" onclick="editEvent(${i})">Edit</button>
       <button class="btn btn-sm btn-danger" onclick="deleteEvent(${i})">Delete</button>
     </div>
@@ -362,10 +495,18 @@ function renderEvents() {
 form.addEventListener("submit", e => {
   e.preventDefault();
 
+  const paymentEl = document.querySelector('input[name="eventPayment"]:checked');
   const data = {
     name: `${firstName.value} ${middleName.value} ${lastName.value}`,
     date: date.value,
-    location: location.value,
+    campus: eventCampus.value,
+    location: eventCampus.value,
+    phone: eventPhone.value.trim(),
+    addressLine: eventAddressLine.value.trim(),
+    cityMuni: eventCity.value.trim(),
+    province: eventProvince.value.trim(),
+    postal: eventPostal.value.trim(),
+    paymentMethod: paymentEl ? paymentEl.value : "",
     type: type.value,
     email: email.value
   };
@@ -394,9 +535,20 @@ function editEvent(i) {
   middleName.value = names[1] || "";
   lastName.value = names[2] || "";
   date.value = e.date;
-  location.value = e.location;
+  eventCampus.value = e.campus || e.location || "";
+  eventPhone.value = e.phone || "";
+  eventAddressLine.value = e.addressLine || "";
+  eventCity.value = e.cityMuni || "";
+  eventProvince.value = e.province || "";
+  eventPostal.value = e.postal || "";
   type.value = e.type;
   email.value = e.email;
+
+  document.querySelectorAll('input[name="eventPayment"]').forEach(r => { r.checked = false; });
+  if (e.paymentMethod) {
+    const match = Array.from(document.querySelectorAll('input[name="eventPayment"]')).find(r => r.value === e.paymentMethod);
+    if (match) match.checked = true;
+  }
 
   editIndex = i;
 }

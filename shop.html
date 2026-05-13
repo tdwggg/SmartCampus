@@ -561,25 +561,43 @@ padding:2px 6px;
                 <label for="spCod"><i class="fas fa-hand-holding-dollar"></i>COD</label>
               </div>
               <div>
-                <input type="radio" name="shopPayment" id="spGcash" value="GCash">
-                <label for="spGcash"><i class="fas fa-mobile-screen"></i>GCash</label>
-              </div>
-              <div>
                 <input type="radio" name="shopPayment" id="spMaya" value="Maya">
-                <label for="spMaya"><i class="fas fa-credit-card"></i>Maya</label>
-              </div>
-              <div>
-                <input type="radio" name="shopPayment" id="spBank" value="Bank transfer">
-                <label for="spBank"><i class="fas fa-building-columns"></i>Bank</label>
+                <label for="spMaya"><i class="fas fa-mobile-screen"></i>Maya</label>
               </div>
               <div>
                 <input type="radio" name="shopPayment" id="spCard" value="Card">
-                <label for="spCard"><i class="fas fa-wallet"></i>Card</label>
+                <label for="spCard"><i class="fas fa-credit-card"></i>Card</label>
               </div>
-              <div>
-                <input type="radio" name="shopPayment" id="spGrab" value="GrabPay">
-                <label for="spGrab"><i class="fas fa-motorcycle"></i>GrabPay</label>
+            </div>
+          </div>
+          <div id="paymentDetails" class="checkout-section mb-0" style="display:none;">
+            <div class="lbl"><i class="fas fa-info-circle"></i> Payment details</div>
+            <div id="gcashFields" style="display:none;">
+              <div style="background: #f0f7ff; border: 1px solid #bde7ff; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                <p class="small fw-bold mb-1">Maya Account</p>
+                <p class="small mb-0" style="font-family: monospace; color: #0b2a4a; font-weight: bold;">09178625413</p>
+                <p class="small text-muted mb-0">Registered to: PUP Campus Shop</p>
               </div>
+              <p class="small text-muted mb-2">Send payment to the account above, then fill in your receipt details.</p>
+              <input type="tel" class="form-control mb-2" id="gcashNumber" placeholder="Your Maya mobile number" pattern="[0-9]{11}" title="Enter 11-digit mobile number">
+              <input type="text" class="form-control mb-2" id="gcashReference" placeholder="Transaction reference number (receipt)">
+            </div>
+            <div id="bankFields" style="display:none;">
+              <p class="small text-muted mb-2">Select your card type and enter your receipt details.</p>
+              <select id="bankName" class="form-select mb-2">
+                <option value="">Select card type</option>
+                <option>Visa</option>
+                <option>Mastercard</option>
+                <option>Amex</option>
+                <option>Debit Card</option>
+              </select>
+              <div id="bankDetails" style="background: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: none;">
+                <p class="small fw-bold mb-1">Processing Details</p>
+                <p class="small mb-0" style="color: #666;">Card will be processed securely via <strong id="bankAcctName" style="font-family: monospace; color: #0b2a4a;">Payment Gateway</strong></p>
+              </div>
+              <input type="text" class="form-control mb-2" id="bankAccountName" placeholder="Cardholder name (as shown on card)">
+              <input type="text" class="form-control mb-2" id="bankAccountNumber" placeholder="Last 4 digits of card">
+              <input type="text" class="form-control mb-2" id="bankReference" placeholder="Transaction reference (if available)">
             </div>
           </div>
           <button type="submit" class="checkout-btn mt-3 mb-1">Confirm order</button>
@@ -803,6 +821,14 @@ function applyCheckoutPrefsToForm() {
     if (p.shopPayment) {
         document.querySelectorAll('input[name="shopPayment"]').forEach(r => { r.checked = r.value === p.shopPayment; });
     }
+    updatePaymentDetails();
+    updatePaymentDetails();
+    if (p.gcashNumber) document.getElementById("gcashNumber").value = p.gcashNumber;
+    if (p.gcashReference) document.getElementById("gcashReference").value = p.gcashReference;
+    if (p.bankName) document.getElementById("bankName").value = p.bankName;
+    if (p.bankAccountName) document.getElementById("bankAccountName").value = p.bankAccountName;
+    if (p.bankAccountNumber) document.getElementById("bankAccountNumber").value = p.bankAccountNumber;
+    if (p.bankReference) document.getElementById("bankReference").value = p.bankReference;
     if (p.chkCampus) applyCampusAddress(p.chkCampus);
 }
 
@@ -843,11 +869,49 @@ function applyCampusAddress(campusValue) {
     }
 }
 
+const cardTypeMap = {
+    "Visa": { name: "Visa" },
+    "Mastercard": { name: "Mastercard" },
+    "Amex": { name: "American Express" },
+    "Debit Card": { name: "Debit Card" }
+};
+
+function updatePaymentDetails() {
+    const selected = document.querySelector('input[name="shopPayment"]:checked');
+    const paymentDetails = document.getElementById("paymentDetails");
+    const gcashFields = document.getElementById("gcashFields");
+    const bankFields = document.getElementById("bankFields");
+
+    paymentDetails.style.display = selected && (selected.value === "Maya" || selected.value === "Card") ? "block" : "none";
+    gcashFields.style.display = selected && selected.value === "Maya" ? "block" : "none";
+    bankFields.style.display = selected && selected.value === "Card" ? "block" : "none";
+}
+
+function updateBankDetails() {
+    const selectedCard = document.getElementById("bankName").value;
+    const bankDetails = document.getElementById("bankDetails");
+    const bankAcctName = document.getElementById("bankAcctName");
+
+    if (selectedCard && cardTypeMap[selectedCard]) {
+        const cardInfo = cardTypeMap[selectedCard];
+        bankAcctName.textContent = cardInfo.name;
+        bankDetails.style.display = "block";
+    } else {
+        bankDetails.style.display = "none";
+    }
+}
+
 if (campusSelect) {
     campusSelect.addEventListener("change", function() {
         applyCampusAddress(this.value);
     });
 }
+
+document.getElementById("bankName").addEventListener("change", updateBankDetails);
+
+document.querySelectorAll('input[name="shopPayment"]').forEach(radio => {
+    radio.addEventListener("change", updatePaymentDetails);
+});
 
 document.getElementById("checkoutBtn").addEventListener("click", function() {
     if (cart.length === 0) return;
@@ -868,17 +932,40 @@ document.getElementById("checkoutForm").addEventListener("submit", function(ev) 
         chkCity: document.getElementById("chkCity").value.trim(),
         chkProvince: document.getElementById("chkProvince").value.trim(),
         chkPostal: document.getElementById("chkPostal").value.trim(),
-        shopPayment: pay ? pay.value : ""
+        shopPayment: pay ? pay.value : "",
+        gcashNumber: document.getElementById("gcashNumber").value.trim(),
+        gcashReference: document.getElementById("gcashReference").value.trim(),
+        bankName: document.getElementById("bankName").value,
+        bankAccountName: document.getElementById("bankAccountName").value.trim(),
+        bankAccountNumber: document.getElementById("bankAccountNumber").value.trim(),
+        bankReference: document.getElementById("bankReference").value.trim()
     };
+
+    if (pay && pay.value === "Maya") {
+        if (!prefs.gcashNumber || !prefs.gcashReference) {
+            alert("Please enter your Maya number and transaction reference.");
+            return;
+        }
+    }
+
+    if (pay && pay.value === "Card") {
+        if (!prefs.bankName || !prefs.bankAccountName || !prefs.bankAccountNumber) {
+            alert("Please complete your card details before confirming.");
+            return;
+        }
+    }
+
     saveCheckoutPrefs(prefs);
 
     const total = document.getElementById("total").innerText;
     const summary = [
         "Order placed (demo).",
         "Payment: " + prefs.shopPayment,
+        pay && pay.value === "Maya" ? "Maya ref: " + prefs.gcashReference : "",
+        pay && pay.value === "Card" ? "Card: " + prefs.bankName + " (****" + prefs.bankAccountNumber + ")" : "",
         "Ship to: " + prefs.chkAddress + ", " + prefs.chkCity + ", " + prefs.chkProvince,
         "Total: ₱" + total
-    ].join("\n");
+    ].filter(Boolean).join("\n");
 
     cart = [];
     updateCart();

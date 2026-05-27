@@ -609,7 +609,7 @@ padding:2px 6px;
 </div>
 
 <script>
-let cart = [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let products = JSON.parse(localStorage.getItem("products")) || [];
 
 
@@ -700,6 +700,7 @@ function updateCart(){
     document.querySelectorAll(".js-cart-count").forEach(el => { el.textContent = cart.length; });
     clearBtn.style.display = cart.length > 0 ? 'block' : 'none';
     if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+    localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 

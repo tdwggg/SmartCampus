@@ -24,7 +24,7 @@
 
     .hero {
       padding: 120px 0;
-      background: url('NavPIC.jpg') center/cover no-repeat;
+      background: transparent;
       position: relative;
     }
 
@@ -67,7 +67,7 @@
     .sidebar h5 { color: white; }
 
     .section {
-      background: rgba(255,255,255,0.95);
+      background: transparent;
       padding: 60px 0;
     }
 
@@ -118,6 +118,12 @@
     #eventForm .form-control,
     #eventForm .form-select {
       border-radius: 10px;
+    }
+
+    #formSection .card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
   </style>
 </head>
@@ -202,24 +208,13 @@
     <h1 class="fw-bold display-4 mb-3">Plan Campus Events Smarter</h1>
     <p class="lead mb-5">Organize events, tasks, and announcements in one place</p>
 
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-
-        <div class="card p-4 shadow">
-          <h5>Upcoming Events</h5>
-          <ul id="eventList" class="list-group"></ul>
-        </div>
-
-      </div>
-    </div>
-
   </div>
 </section>
 <section class="section" id="formSection">
   <div class="container">
     <h2 class="text-center mb-4">Create Event</h2>
 
-    <div class="row justify-content-center">
+    <div class="row g-4">
       <div class="col-lg-6">
         <form id="eventForm" class="card p-4 shadow">
 
@@ -284,6 +279,12 @@
 
           <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="border-radius: 12px;">Create Event</button>
         </form>
+      </div>
+      <div class="col-lg-6">
+        <div class="card p-4 shadow h-100">
+          <h2 class="h5 mb-3">Upcoming Events</h2>
+          <ul id="eventList" class="list-group"></ul>
+        </div>
       </div>
     </div>
   </div>
@@ -417,6 +418,7 @@ form.addEventListener("submit", e => {
 
   form.reset();
   renderEvents();
+  updateCartDropdown();
 });
 
 function deleteEvent(i) {
@@ -424,11 +426,40 @@ function deleteEvent(i) {
   renderEvents();
 }
 
+function updateCartDropdown() {
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const cartCount = document.getElementById("cartCount");
+  const cartItemsDropdown = document.getElementById("cartItemsDropdown");
+
+  if (cartCount) {
+    cartCount.textContent = cart.length;
+  }
+
+  if (!cartItemsDropdown) {
+    return;
+  }
+
+  if (cart.length === 0) {
+    cartItemsDropdown.innerHTML = '<span class="dropdown-item-text px-4 py-2 text-muted small">Cart is empty</span>';
+    return;
+  }
+
+  const itemsHtml = cart.slice(0, 3).map(item => `
+    <div class="dropdown-item-text px-4 py-2">
+      <strong>${item.name}</strong><br>
+      <small class="text-muted">Qty: ${item.qty}</small>
+    </div>
+  `).join("");
+
+  const moreHtml = cart.length > 3 ?
+    `<div class="dropdown-item-text px-4 py-2 text-muted small">+ ${cart.length - 3} more item(s)</div>` : "";
+
+  cartItemsDropdown.innerHTML = itemsHtml + moreHtml;
+}
+
 function editEvent(i) {
   const e = events[i];
   const names = e.name.split(" ");
-
-  firstName.value = names[0];
   middleName.value = names[1] || "";
   lastName.value = names[2] || "";
   date.value = e.date;
@@ -445,6 +476,8 @@ function editEvent(i) {
 }
 
 renderEvents();
+updateCartDropdown();
+window.addEventListener('storage', updateCartDropdown);
 </script>
 
 
@@ -622,10 +655,8 @@ function checkAuth() {
 }
 
 function openCart() {
-    // Placeholder for cart functionality
     if (checkAuth()) {
-        // Navigate to cart page or show cart modal
-        alert('Cart functionality coming soon!');
+        window.location.href = 'shop.html';
     }
 }
 

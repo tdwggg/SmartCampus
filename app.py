@@ -100,3 +100,6 @@ def delete_product(id):
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5000)
+
+if __name__ == '__main__':
+    app.run(port=5002, debug=True)    

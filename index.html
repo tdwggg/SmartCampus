@@ -24,7 +24,7 @@
 
     .hero {
       padding: 120px 0;
-      background: url('NavPIC.jpg') center/cover no-repeat;
+      background: transparent;
       position: relative;
     }
 
@@ -67,7 +67,7 @@
     .sidebar h5 { color: white; }
 
     .section {
-      background: rgba(255,255,255,0.95);
+      background: transparent;
       padding: 60px 0;
     }
 
@@ -115,53 +115,15 @@
       opacity: 0.9;
     }
 
-    .payment-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-    }
-
-    @media (min-width: 576px) {
-      .payment-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    .payment-grid input { position: absolute; opacity: 0; pointer-events: none; }
-
-    .payment-grid label {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.35rem;
-      padding: 0.65rem 0.4rem;
-      border: 2px solid #e9ecef;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #495057;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-      text-align: center;
-      min-height: 4.25rem;
-    }
-
-    .payment-grid label i { font-size: 1.15rem; color: #1a5778; }
-
-    .payment-grid input:focus-visible + label {
-      outline: 2px solid #1a5778;
-      outline-offset: 2px;
-    }
-
-    .payment-grid input:checked + label {
-      border-color: #1a5778;
-      background: rgba(26, 87, 120, 0.08);
-      box-shadow: 0 0 0 1px rgba(26, 87, 120, 0.25);
-      color: #0b2a4a;
-    }
-
     #eventForm .form-control,
     #eventForm .form-select {
       border-radius: 10px;
+    }
+
+    #formSection .card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
   </style>
 </head>
@@ -240,44 +202,11 @@
     <button class="btn btn-light ms-2" onclick="window.location.href='index.html'">Home</button>
   </div>
 </nav>
-<div class="sidebar" id="sidebar">
-  <h5>Menu <span class="close-btn" onclick="toggleSidebar()">&times;</span></h5>
-  <hr>
-
-  <div class="d-grid gap-3 mt-4">
-    <button class="btn btn-primary rounded-pill" onclick="window.location.href='about.html'">
-      About
-    </button>
-    <button class="btn btn-primary rounded-pill" onclick="window.location.href='shop.html'">
-      Shop
-    </button>
-    <button class="btn btn-primary rounded-pill" onclick="scrollToForm()">
-      Create Event
-    </button>
-    <button class="btn btn-primary rounded-pill" onclick="window.location.href='Task.html'">
-      Officers Task
-    </button>
-    <button class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#loginModal" onclick="toggleSidebar()">
-      Log in/Sign-up
-    </button>
-  </div>
-</div>
 <section class="hero text-white text-center">
   <div class="container hero-content">
 
     <h1 class="fw-bold display-4 mb-3">Plan Campus Events Smarter</h1>
     <p class="lead mb-5">Organize events, tasks, and announcements in one place</p>
-
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-
-        <div class="card p-4 shadow">
-          <h5>Upcoming Events</h5>
-          <ul id="eventList" class="list-group"></ul>
-        </div>
-
-      </div>
-    </div>
 
   </div>
 </section>
@@ -285,9 +214,8 @@
   <div class="container">
     <h2 class="text-center mb-4">Create Event</h2>
 
-    <div class="row justify-content-center">
+    <div class="row g-4">
       <div class="col-lg-6">
-
         <form id="eventForm" class="card p-4 shadow">
 
           <div class="market-card-section">
@@ -320,6 +248,7 @@
               <option>PUP Mindoro</option>
               <option>PUP Ragay</option>
               <option>PUP Maragondon</option>
+              <option class="form-select" >Others</option>
             </select>
             <label class="form-label small text-muted mb-1">Street, building, room / landmark</label>
             <textarea id="eventAddressLine" class="form-control mb-2" rows="2" placeholder="e.g. Building N, Room 301, near library" required></textarea>
@@ -351,6 +280,12 @@
 
           <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="border-radius: 12px;">Create Event</button>
         </form>
+      </div>
+      <div class="col-lg-6">
+        <div class="card p-4 shadow h-100">
+          <h2 class="h5 mb-3">Upcoming Events</h2>
+          <ul id="eventList" class="list-group"></ul>
+        </div>
       </div>
     </div>
   </div>
@@ -437,16 +372,13 @@ function renderEvents() {
     li.className = "list-group-item";
 
     const campus = e.campus || e.location || "";
-    const pay = e.paymentMethod || "—";
-    const addr = e.addressLine ? `${e.addressLine}` : "";
-    li.innerHTML = `
+  const addr = e.addressLine ? `${e.addressLine}` : "";
+  li.innerHTML = `
   <div class="d-flex justify-content-between align-items-start gap-2">
     <div>
       <strong>${e.type}</strong><br>
       <small class="text-muted">📅 ${e.date}</small><br>
-      <small class="text-muted">📍 ${campus}${addr ? " · " + addr.replace(/</g, "") : ""}</small><br>
-      <small class="text-muted">💳 ${pay}</small>
-    </div>
+      <small class="text-muted">📍 ${campus}${addr ? " · " + addr.replace(/</g, "") : ""}</small>
 
     <div class="flex-shrink-0">
       <button class="btn btn-sm btn-warning" onclick="editEvent(${i})">Edit</button>
@@ -464,7 +396,6 @@ function renderEvents() {
 form.addEventListener("submit", e => {
   e.preventDefault();
 
-  const paymentEl = document.querySelector('input[name="eventPayment"]:checked');
   const data = {
     name: `${firstName.value} ${middleName.value} ${lastName.value}`,
     date: date.value,
@@ -475,7 +406,6 @@ form.addEventListener("submit", e => {
     cityMuni: eventCity.value.trim(),
     province: eventProvince.value.trim(),
     postal: eventPostal.value.trim(),
-    paymentMethod: paymentEl ? paymentEl.value : "",
     type: type.value,
     email: email.value
   };
@@ -489,6 +419,7 @@ form.addEventListener("submit", e => {
 
   form.reset();
   renderEvents();
+  updateCartDropdown();
 });
 
 function deleteEvent(i) {
@@ -496,11 +427,40 @@ function deleteEvent(i) {
   renderEvents();
 }
 
+function updateCartDropdown() {
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const cartCount = document.getElementById("cartCount");
+  const cartItemsDropdown = document.getElementById("cartItemsDropdown");
+
+  if (cartCount) {
+    cartCount.textContent = cart.length;
+  }
+
+  if (!cartItemsDropdown) {
+    return;
+  }
+
+  if (cart.length === 0) {
+    cartItemsDropdown.innerHTML = '<span class="dropdown-item-text px-4 py-2 text-muted small">Cart is empty</span>';
+    return;
+  }
+
+  const itemsHtml = cart.slice(0, 3).map(item => `
+    <div class="dropdown-item-text px-4 py-2">
+      <strong>${item.name}</strong><br>
+      <small class="text-muted">Qty: ${item.qty}</small>
+    </div>
+  `).join("");
+
+  const moreHtml = cart.length > 3 ?
+    `<div class="dropdown-item-text px-4 py-2 text-muted small">+ ${cart.length - 3} more item(s)</div>` : "";
+
+  cartItemsDropdown.innerHTML = itemsHtml + moreHtml;
+}
+
 function editEvent(i) {
   const e = events[i];
   const names = e.name.split(" ");
-
-  firstName.value = names[0];
   middleName.value = names[1] || "";
   lastName.value = names[2] || "";
   date.value = e.date;
@@ -513,16 +473,12 @@ function editEvent(i) {
   type.value = e.type;
   email.value = e.email;
 
-  document.querySelectorAll('input[name="eventPayment"]').forEach(r => { r.checked = false; });
-  if (e.paymentMethod) {
-    const match = Array.from(document.querySelectorAll('input[name="eventPayment"]')).find(r => r.value === e.paymentMethod);
-    if (match) match.checked = true;
-  }
-
   editIndex = i;
 }
 
 renderEvents();
+updateCartDropdown();
+window.addEventListener('storage', updateCartDropdown);
 </script>
 
 
@@ -700,10 +656,8 @@ function checkAuth() {
 }
 
 function openCart() {
-    // Placeholder for cart functionality
     if (checkAuth()) {
-        // Navigate to cart page or show cart modal
-        alert('Cart functionality coming soon!');
+        window.location.href = 'shop.html';
     }
 }
 

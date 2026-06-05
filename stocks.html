@@ -22,55 +22,82 @@
 </table>
 
 <script>
-let products = JSON.parse(localStorage.getItem("products")) || [];
+const API_URL = 'http://localhost:5000/api';
+let products = [];
 
-function render(){
-let html="";
-
-products.forEach((p,i)=>{
-html += `
-<tr>
-<td>${p.name}</td>
-<td>${p.stock}</td>
-<td>
-<input type="number" id="stock${i}" class="form-control" placeholder="Enter stock">
-</td>
-<td>
-<button class="btn btn-success btn-sm" onclick="updateStock(${i})">Update</button>
-<button class="btn btn-danger btn-sm" onclick="setZero(${i})">Sold Out</button>
-<button class="btn btn-warning btn-sm" onclick="setPreOrder(${i})">Pre-Order</button>
-</td>
-</tr>
-`;
-});
-
-document.getElementById("stockTable").innerHTML = html;
+async function render(){
+  let html="";
+  
+  products.forEach((p)=>{
+    html += `
+    <tr>
+      <td>${p.name}</td>
+      <td>${p.stock === 999 ? 'Pre-Order' : p.stock}</td>
+      <td>
+        <input type="number" id="stock${p.id}" class="form-control" placeholder="Enter stock">
+      </td>
+      <td>
+        <button class="btn btn-success btn-sm" onclick="updateStock(${p.id})">Update</button>
+        <button class="btn btn-danger btn-sm" onclick="setZero(${p.id})">Sold Out</button>
+        <button class="btn btn-warning btn-sm" onclick="setPreOrder(${p.id})">Pre-Order</button>
+      </td>
+    </tr>
+    `;
+  });
+  
+  document.getElementById("stockTable").innerHTML = html;
 }
 
-function updateStock(i){
-let val = document.getElementById("stock"+i).value;
-products[i].stock = parseInt(val);
-save();
-render();
+async function loadProducts(){
+  try {
+    const response = await fetch(`${API_URL}/products`);
+    products = await response.json();
+    await render();
+  } catch (error) {
+    console.error('Error loading products:', error);
+    alert('Failed to connect to database. Make sure Flask app is running on port 5000');
+  }
 }
 
-function setZero(i){
-products[i].stock = 0;
-save();
-render();
+async function updateStock(id){
+  let val = document.getElementById("stock"+id).value;
+  try {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock: parseInt(val) })
+    });
+    await loadProducts();
+  } catch (error) {
+    console.error('Error updating stock:', error);
+  }
 }
 
-function setPreOrder(i){
-products[i].stock = 999;
-save();
-render();
+async function setZero(id){
+  try {
+    const response = await fetch(`${API_URL}/products/${id}/sold-out`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    await loadProducts();
+  } catch (error) {
+    console.error('Error marking sold out:', error);
+  }
 }
 
-function save(){
-localStorage.setItem("products", JSON.stringify(products));
+async function setPreOrder(id){
+  try {
+    const response = await fetch(`${API_URL}/products/${id}/pre-order`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    await loadProducts();
+  } catch (error) {
+    console.error('Error marking pre-order:', error);
+  }
 }
 
-render();
+loadProducts();
 </script>
 
 </body>

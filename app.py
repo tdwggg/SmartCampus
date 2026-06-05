@@ -101,5 +101,5 @@ if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5000)
 
-if __name__ == '__main__':
-    app.run(port=5002, debug=True)    
+if _name_ == "_main_":
+    app.run(host="0.0.0.0", port=5001, debug=True)   

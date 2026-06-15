@@ -1,0 +1,64 @@
+body.adminPage {
+  background: #fff;
+  color: #212529;
+  padding-top: 64px;
+}
+
+.adminPage .cardPanel {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.adminPage .orderCard {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-left: 4px solid #1a5778;
+  color: #212529;
+}
+
+.adminPage .table { color: #212529; }
+
+.adminPage .stockOut { color: #dc3545; font-weight: bold; }
+.adminPage .stockLow { color: #fd7e14; font-weight: bold; }
+.adminPage .stockOk { color: #198754; font-weight: bold; }
+.adminPage .preOrder { color: #0dcaf0; font-weight: bold; font-style: italic; }
+
+.adminPage .productThumb {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.adminPage .statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.adminPage .statusOnline { background: #198754; }
+.adminPage .statusOffline { background: #dc3545; }
+
+.adminPage .navbarSite { background: #fff; border-bottom: 1px solid #dee2e6; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.adminPage .navbarSite .navbarBrand,
+.adminPage .navbarSite .navLink { color: #0b2a4a; }
+.adminPage .navbarSite .navLink:hover,
+.adminPage .navbarSite .navLink.active { color: #1a5778; }
+
+.adminPage .sidebarPanel {
+  background: #fff;
+  color: #212529;
+  border-right: 1px solid #dee2e6;
+}
+
+.adminPage .sidebarPanel h5 { color: #212529; }

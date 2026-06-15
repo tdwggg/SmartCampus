@@ -2,48 +2,35 @@
 
 ## Quick Start
 
-### 1. Install dependencies
 ```bash
 cd pythonDB
 pip install -r requirements.txt
-```
-
-### 2. Start the server
-```bash
 python app.py
 ```
 
-The server runs at **http://localhost:5000** and serves both the website and the database API.
+Open **http://localhost:5000**
 
-### 3. Open the site
+## Pages
+
 | Page | URL |
 |------|-----|
 | Home | http://localhost:5000/ |
 | Shop | http://localhost:5000/shop.html |
-| Admin / Stock Control | http://localhost:5000/stocks.html |
-| About | http://localhost:5000/about.html |
 | Tasks | http://localhost:5000/task.html |
+| Login | http://localhost:5000/loginsignup.html |
+| Stock Control | http://localhost:5000/stocks.html |
+| About | http://localhost:5000/about.html |
 
-> Always use the Flask server URL so images and the shop database work correctly.
+## Python Database (SQLite)
 
-## Shop & Admin
+All data is stored in `pythonDB/stocks.db`:
 
-- **Shop** loads live stock from SQLite via `/api/products`
-- **Checkout** saves orders to the database (buyer name, email, items, quantities)
-- **Stock Control** (`stocks.html`) lets you restock, mark sold out, set pre-order, and view all orders
+- **users** — accounts (signup/login persist after browser close)
+- **products** — shop inventory
+- **orders** — purchases with buyer info
+- **events** — campus events from home page
+- **tasks** — officer task assignments
 
-## API Endpoints
+Demo account: `demo@campusshop.com` / `123456`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/products` | List all products |
-| PUT | `/api/products/<id>` | Update stock |
-| PUT | `/api/products/<id>/restock` | Set stock quantity |
-| PUT | `/api/products/<id>/sold-out` | Mark sold out |
-| PUT | `/api/products/<id>/pre-order` | Mark pre-order |
-| GET | `/api/orders` | List all orders |
-| POST | `/api/orders` | Place a new order |
-
-## Reset database
-
-Delete `pythonDB/stocks.db` and restart the server to recreate tables with default merchandise.
+Delete `stocks.db` and restart to reset all data.

@@ -1,23 +1,26 @@
-const API_BASE = window.location.origin.includes("localhost") ||
-                 window.location.origin.includes("127.0.0.1")
+const apiBase = window.location.origin.includes("localhost") ||
+                window.location.origin.includes("127.0.0.1")
   ? window.location.origin
   : "http://localhost:5000";
 
-function imgPath(filename) {
+function imgPath(fileName) {
   if (window.location.protocol === "file:") {
-    return "../Img/mp4/" + filename;
+    return "../Img/mp4/" + fileName;
   }
-  return "/img/" + filename;
+  return "/img/" + fileName;
 }
 
 async function apiGet(path) {
-  const res = await fetch(API_BASE + path);
-  if (!res.ok) throw new Error("API error: " + res.status);
+  const res = await fetch(apiBase + path);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "API error: " + res.status);
+  }
   return res.json();
 }
 
 async function apiPost(path, body) {
-  const res = await fetch(API_BASE + path, {
+  const res = await fetch(apiBase + path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -28,7 +31,7 @@ async function apiPost(path, body) {
 }
 
 async function apiPut(path, body) {
-  const res = await fetch(API_BASE + path, {
+  const res = await fetch(apiBase + path, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
@@ -36,4 +39,33 @@ async function apiPut(path, body) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Request failed");
   return data;
+}
+
+async function apiDelete(path) {
+  const res = await fetch(apiBase + path, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Request failed");
+  }
+  if (res.status !== 204) return res.json();
+}
+
+function showToast(message) {
+  let el = document.getElementById("toastMsg");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "toastMsg";
+    el.className = "toastMsg";
+    document.body.appendChild(el);
+  }
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove("show"), 2500);
+}
+
+function applyPageBackground(fileName) {
+  if (!fileName) return;
+  document.body.classList.add("hasBgImage");
+  document.body.style.backgroundImage = `url('${imgPath(fileName)}')`;
 }

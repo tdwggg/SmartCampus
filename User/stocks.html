@@ -3,243 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stock Control - CampusShop Admin</title>
+  <title>Stock Control - CampusShop</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <style>
-    body { background: #0f172a; color: #e2e8f0; min-height: 100vh; }
-    .navbar-custom { background: #1a5778; }
-    .navbar-custom .navbar-brand { color: white; }
-    .card-panel {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .stock-out { color: #f87171; font-weight: bold; }
-    .stock-low { color: #fbbf24; font-weight: bold; }
-    .stock-ok { color: #4ade80; font-weight: bold; }
-    .pre-order { color: #38bdf8; font-weight: bold; font-style: italic; }
-    .product-thumb { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: white; }
-    .order-card {
-      background: rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-      border-left: 4px solid #1a5778;
-    }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .status-online { background: #4ade80; }
-    .status-offline { background: #f87171; }
-    table { color: #e2e8f0; }
-    .table > :not(caption) > * > * { background: transparent; border-color: rgba(255,255,255,0.1); }
-  </style>
+  <link href="css/site.css" rel="stylesheet">
+  <link href="css/admin.css" rel="stylesheet">
 </head>
-<body>
+<body class="adminPage">
+  <div id="navRoot" data-page="stocks" data-admin="true" data-user="false" data-brand="Stock Control"></div>
 
-<nav class="navbar navbar-custom px-4 mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand fw-bold"><i class="fas fa-boxes me-2"></i>Stock Control</a>
-    <div class="d-flex gap-2">
-      <span id="serverStatus" class="badge bg-secondary align-self-center">
-        <span class="status-dot status-offline me-1"></span> Checking...
+  <div class="container pb-5">
+    <div id="offlineAlert" class="alert alert-danger d-none mt-3">
+      Start the Python server: <code>python app.py</code> in <code>pythonDB</code>, then open
+      <a href="http://localhost:5000/stocks.html">http://localhost:5000/stocks.html</a>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+      <h4 class="mb-0"><i class="fas fa-database me-2"></i>Database Panel</h4>
+      <span id="serverStatus" class="badge bg-secondary">
+        <span class="statusDot statusOffline me-1"></span> Checking...
       </span>
-      <a href="shop.html" class="btn btn-light btn-sm">Shop</a>
-      <a href="index.html" class="btn btn-light btn-sm">Home</a>
     </div>
-  </div>
-</nav>
 
-<div class="container pb-5">
-  <div id="offlineAlert" class="alert alert-danger d-none">
-    <i class="fas fa-exclamation-triangle me-2"></i>
-    Cannot reach the Python server. Run <code>python app.py</code> inside the <code>pythonDB</code> folder, then open
-    <a href="http://localhost:5000/stocks.html" class="alert-link">http://localhost:5000/stocks.html</a>
-  </div>
-
-  <div class="card-panel">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="mb-0"><i class="fas fa-shirt me-2"></i>Product Inventory</h4>
-      <button class="btn btn-primary btn-sm" onclick="loadProducts()">
-        <i class="fas fa-sync-alt me-1"></i>Refresh
-      </button>
-    </div>
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="productsTable"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="card-panel">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="mb-0"><i class="fas fa-receipt me-2"></i>Recent Orders</h4>
-      <button class="btn btn-outline-light btn-sm" onclick="loadOrders()">
-        <i class="fas fa-sync-alt me-1"></i>Refresh
-      </button>
-    </div>
-    <div id="ordersList">
-      <p class="text-muted mb-0">Loading orders...</p>
-    </div>
-  </div>
-</div>
-
-<script src="js/api.js"></script>
-<script>
-let products = [];
-
-function stockLabel(p) {
-  if (p.stock === 0) return '<span class="stock-out">SOLD OUT</span>';
-  if (p.stock >= 999) return '<span class="pre-order">PRE-ORDER</span>';
-  const cls = p.stock <= 5 ? "stock-low" : "stock-ok";
-  return `<span class="${cls}">${p.stock}</span>`;
-}
-
-async function checkServer() {
-  const el = document.getElementById("serverStatus");
-  const alert = document.getElementById("offlineAlert");
-  try {
-    await apiGet("/api/health");
-    el.innerHTML = '<span class="status-dot status-online me-1"></span> Server online';
-    el.className = "badge bg-success align-self-center";
-    alert.classList.add("d-none");
-    return true;
-  } catch {
-    el.innerHTML = '<span class="status-dot status-offline me-1"></span> Server offline';
-    el.className = "badge bg-danger align-self-center";
-    alert.classList.remove("d-none");
-    return false;
-  }
-}
-
-async function loadProducts() {
-  try {
-    products = await apiGet("/api/products");
-    const tbody = document.getElementById("productsTable");
-    tbody.innerHTML = products.map(p => `
-      <tr>
-        <td>
-          <div class="d-flex align-items-center gap-2">
-            <img src="${imgPath(p.image)}" class="product-thumb" alt="">
-            <strong>${p.name}</strong>
-          </div>
-        </td>
-        <td>₱${p.price.toLocaleString()}</td>
-        <td>${stockLabel(p)}</td>
-        <td>
-          <div class="d-flex flex-wrap gap-1">
-            <button class="btn btn-success btn-sm" onclick="restock(${p.id})" title="Restock">
-              <i class="fas fa-plus"></i>
-            </button>
-            <button class="btn btn-warning btn-sm" onclick="setStock(${p.id})" title="Set stock">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="soldOut(${p.id})" title="Sold out">
-              <i class="fas fa-ban"></i>
-            </button>
-            <button class="btn btn-info btn-sm" onclick="preOrder(${p.id})" title="Pre-order">
-              <i class="fas fa-clock"></i>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `).join("");
-  } catch (e) {
-    document.getElementById("productsTable").innerHTML =
-      `<tr><td colspan="4" class="text-danger">Failed to load products: ${e.message}</td></tr>`;
-  }
-}
-
-async function restock(id) {
-  const amount = prompt("Enter new stock quantity:", "10");
-  if (amount === null) return;
-  const stock = parseInt(amount, 10);
-  if (isNaN(stock) || stock < 0) { alert("Invalid number"); return; }
-  await apiPut(`/api/products/${id}/restock`, { stock });
-  loadProducts();
-}
-
-async function setStock(id) {
-  const amount = prompt("Set stock to:", "10");
-  if (amount === null) return;
-  const stock = parseInt(amount, 10);
-  if (isNaN(stock) || stock < 0) { alert("Invalid number"); return; }
-  await apiPut(`/api/products/${id}`, { stock });
-  loadProducts();
-}
-
-async function soldOut(id) {
-  if (!confirm("Mark this product as sold out?")) return;
-  await apiPut(`/api/products/${id}/sold-out`);
-  loadProducts();
-}
-
-async function preOrder(id) {
-  if (!confirm("Mark as pre-order (unlimited stock)?")) return;
-  await apiPut(`/api/products/${id}/pre-order`);
-  loadProducts();
-}
-
-async function loadOrders() {
-  const container = document.getElementById("ordersList");
-  try {
-    const orders = await apiGet("/api/orders");
-    if (orders.length === 0) {
-      container.innerHTML = '<p class="text-muted mb-0">No orders yet.</p>';
-      return;
-    }
-    container.innerHTML = orders.map(o => `
-      <div class="order-card">
-        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
-          <div>
-            <strong>Order #${o.id}</strong> — ${o.buyer_name}
-            <br><small class="text-muted">${o.buyer_email} · ${o.buyer_phone}</small>
-          </div>
-          <div class="text-end">
-            <strong class="text-success">₱${o.total.toLocaleString()}</strong>
-            <br><small class="text-muted">${new Date(o.created_at).toLocaleString()}</small>
-          </div>
-        </div>
-        <div class="small mb-1">
-          <i class="fas fa-map-marker-alt me-1"></i>
-          ${o.campus || ""} — ${o.address || ""}, ${o.city || ""}, ${o.province || ""}
-        </div>
-        <div class="small mb-2">
-          <i class="fas fa-wallet me-1"></i> ${o.payment_method || "N/A"}
-        </div>
-        <div class="small">
-          ${o.items.map(i => `
-            <span class="badge bg-primary me-1 mb-1">
-              ${i.product_name} × ${i.quantity}${i.size && i.size !== "Default" ? " (" + i.size + ")" : ""}
-            </span>
-          `).join("")}
-        </div>
+    <div class="cardPanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-shirt me-2"></i>Product Inventory</h5>
+        <button class="btn btn-primary btn-sm" onclick="loadProducts()"><i class="fas fa-sync-alt"></i> Refresh</button>
       </div>
-    `).join("");
-  } catch (e) {
-    container.innerHTML = `<p class="text-danger mb-0">Failed to load orders: ${e.message}</p>`;
-  }
-}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Product</th><th>Price</th><th>Stock</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="productsTable"></tbody>
+        </table>
+      </div>
+    </div>
 
-async function init() {
-  const online = await checkServer();
-  if (online) {
-    await loadProducts();
-    await loadOrders();
-  }
-}
+    <div class="cardPanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Customer Orders</h5>
+        <button class="btn btn-outline-secondary btn-sm" onclick="loadOrders()"><i class="fas fa-sync-alt"></i> Refresh</button>
+      </div>
+      <div id="ordersList"><p class="text-muted mb-0">Loading...</p></div>
+    </div>
+  </div>
 
-init();
-setInterval(checkServer, 30000);
-</script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    let products = [];
+
+    function stockLabel(p) {
+      if (p.stock === 0) return '<span class="stockOut">SOLD OUT</span>';
+      if (p.stock >= 999) return '<span class="preOrder">PRE-ORDER</span>';
+      const cls = p.stock <= 5 ? "stockLow" : "stockOk";
+      return `<span class="${cls}">${p.stock}</span>`;
+    }
+
+    async function checkServer() {
+      const el = document.getElementById("serverStatus");
+      const alertEl = document.getElementById("offlineAlert");
+      try {
+        await apiGet("/api/health");
+        el.innerHTML = '<span class="statusDot statusOnline me-1"></span> Online';
+        el.className = "badge bg-success";
+        alertEl.classList.add("d-none");
+        return true;
+      } catch {
+        el.innerHTML = '<span class="statusDot statusOffline me-1"></span> Offline';
+        el.className = "badge bg-danger";
+        alertEl.classList.remove("d-none");
+        return false;
+      }
+    }
+
+    async function loadProducts() {
+      try {
+        products = await apiGet("/api/products");
+        document.getElementById("productsTable").innerHTML = products.map(p => `
+          <tr>
+            <td><div class="d-flex align-items-center gap-2">
+              <img src="${imgPath(p.image)}" class="productThumb" alt="">
+              <strong>${p.name}</strong>
+            </div></td>
+            <td>₱${p.price.toLocaleString()}</td>
+            <td>${stockLabel(p)}</td>
+            <td><div class="d-flex flex-wrap gap-1">
+              <button class="btn btn-success btn-sm" onclick="restockItem(${p.id})" title="Restock"><i class="fas fa-plus"></i></button>
+              <button class="btn btn-warning btn-sm" onclick="setStockItem(${p.id})" title="Set stock"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="soldOutItem(${p.id})" title="Sold out"><i class="fas fa-ban"></i></button>
+              <button class="btn btn-info btn-sm" onclick="preOrderItem(${p.id})" title="Pre-order"><i class="fas fa-clock"></i></button>
+            </div></td>
+          </tr>`).join("");
+      } catch (e) {
+        document.getElementById("productsTable").innerHTML =
+          `<tr><td colspan="4" class="text-danger">${e.message}</td></tr>`;
+      }
+    }
+
+    async function restockItem(id) {
+      const amount = prompt("Enter stock quantity:", "10");
+      if (amount === null) return;
+      await apiPut(`/api/products/${id}/restock`, { stock: parseInt(amount, 10) });
+      loadProducts();
+    }
+
+    async function setStockItem(id) {
+      const amount = prompt("Set stock to:", "10");
+      if (amount === null) return;
+      await apiPut(`/api/products/${id}`, { stock: parseInt(amount, 10) });
+      loadProducts();
+    }
+
+    async function soldOutItem(id) {
+      if (confirm("Mark as sold out?")) await apiPut(`/api/products/${id}/sold-out`);
+      loadProducts();
+    }
+
+    async function preOrderItem(id) {
+      if (confirm("Mark as pre-order?")) await apiPut(`/api/products/${id}/pre-order`);
+      loadProducts();
+    }
+
+    async function loadOrders() {
+      const container = document.getElementById("ordersList");
+      try {
+        const orders = await apiGet("/api/orders");
+        if (!orders.length) {
+          container.innerHTML = '<p class="text-muted mb-0">No orders yet.</p>';
+          return;
+        }
+        container.innerHTML = orders.map(o => `
+          <div class="orderCard">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+              <div>
+                <strong>Order #${o.id}</strong> — ${o.buyer_name}
+                <br><small class="text-muted">${o.buyer_email} · ${o.buyer_phone}</small>
+              </div>
+              <div class="text-end">
+                <strong class="text-success">₱${o.total.toLocaleString()}</strong>
+                <br><small class="text-muted">${new Date(o.created_at).toLocaleString()}</small>
+              </div>
+            </div>
+            <div class="small mb-1"><i class="fas fa-map-marker-alt me-1"></i>${o.campus || ""} — ${o.address || ""}, ${o.city || ""}</div>
+            <div class="small mb-2"><i class="fas fa-wallet me-1"></i>${o.payment_method || "N/A"}</div>
+            <div>${o.items.map(i => `<span class="badge bg-primary me-1">${i.product_name} × ${i.quantity}</span>`).join("")}</div>
+          </div>`).join("");
+      } catch (e) {
+        container.innerHTML = `<p class="text-danger mb-0">${e.message}</p>`;
+      }
+    }
+
+    async function initAdmin() {
+      if (await checkServer()) {
+        await loadProducts();
+        await loadOrders();
+      }
+    }
+
+    initAdmin();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

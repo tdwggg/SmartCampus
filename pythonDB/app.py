@@ -1,19 +1,21 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
+import json
 from datetime import datetime
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(BASE_DIR)
-USER_DIR = os.path.join(PROJECT_ROOT, "User")
-IMG_DIR = os.path.join(PROJECT_ROOT, "Img", "mp4")
-DATABASE = os.path.join(BASE_DIR, "stocks.db")
+baseDir = os.path.dirname(os.path.abspath(__file__))
+projectRoot = os.path.dirname(baseDir)
+userDir = os.path.join(projectRoot, "User")
+imgDir = os.path.join(projectRoot, "Img", "mp4")
+database = os.path.join(baseDir, "stocks.db")
 
-app = Flask(__name__, static_folder=USER_DIR, static_url_path="")
+app = Flask(__name__, static_folder=userDir, static_url_path="")
 CORS(app)
 
-SHOP_PRODUCTS = [
+shopProducts = [
     {"name": "ITECH Lace", "price": 100, "stock": 10, "image": "ITECHlace.png"},
     {"name": "ITECH Sleeveless", "price": 450, "stock": 10, "image": "ITECHSLEEVELES.jpg"},
     {"name": "ITECH T-Shirt", "price": 450, "stock": 10, "image": "ITECHTSHIRT.jpg"},
@@ -23,15 +25,22 @@ SHOP_PRODUCTS = [
 ]
 
 
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
+def getDb():
+    conn = sqlite3.connect(database)
     conn.row_factory = sqlite3.Row
     return conn
 
 
-def init_db():
-    conn = get_db_connection()
+def initDb():
+    conn = getDb()
     conn.executescript("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
@@ -64,6 +73,33 @@ def init_db():
             unit_price INTEGER NOT NULL,
             FOREIGN KEY (order_id) REFERENCES orders(id)
         );
+        CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            organizer_name TEXT NOT NULL,
+            event_date TEXT NOT NULL,
+            campus TEXT,
+            phone TEXT,
+            address_line TEXT,
+            city TEXT,
+            province TEXT,
+            postal TEXT,
+            event_type TEXT,
+            email TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            officer_name TEXT NOT NULL,
+            department TEXT NOT NULL,
+            position TEXT NOT NULL,
+            event_types TEXT NOT NULL,
+            description TEXT NOT NULL,
+            deadline TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            submission TEXT,
+            completed_at TEXT,
+            created_at TEXT NOT NULL
+        );
     """)
 
     cols = {row[1] for row in conn.execute("PRAGMA table_info(products)").fetchall()}
@@ -72,18 +108,10 @@ def init_db():
     if "image" not in cols:
         conn.execute("ALTER TABLE products ADD COLUMN image TEXT NOT NULL DEFAULT ''")
 
-    count = conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]
-    old_samples = ("Laptop", "Phone", "Tablet")
-    conn.execute(
-        f"DELETE FROM products WHERE name IN ({','.join('?' * len(old_samples))})",
-        old_samples,
-    )
-
-    for p in SHOP_PRODUCTS:
-        existing = conn.execute(
-            "SELECT id FROM products WHERE name = ?", (p["name"],)
-        ).fetchone()
-        if existing:
+    conn.execute("DELETE FROM products WHERE name IN ('Laptop', 'Phone', 'Tablet')")
+    for p in shopProducts:
+        row = conn.execute("SELECT id FROM products WHERE name = ?", (p["name"],)).fetchone()
+        if row:
             conn.execute(
                 "UPDATE products SET price = ?, image = ? WHERE name = ?",
                 (p["price"], p["image"], p["name"]),
@@ -94,11 +122,25 @@ def init_db():
                 (p["name"], p["price"], p["stock"], p["image"]),
             )
 
+    demo = conn.execute(
+        "SELECT id FROM users WHERE email = ?", ("demo@campusshop.com",)
+    ).fetchone()
+    if not demo:
+        conn.execute(
+            "INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, ?)",
+            (
+                "Demo User",
+                "demo@campusshop.com",
+                generate_password_hash("123456"),
+                datetime.now().isoformat(),
+            ),
+        )
+
     conn.commit()
     conn.close()
 
 
-def row_to_product(row):
+def rowToProduct(row):
     product = dict(row)
     stock = product["stock"]
     if stock == 0:
@@ -112,118 +154,147 @@ def row_to_product(row):
     return product
 
 
+def rowToUser(row):
+    return {"id": row["id"], "name": row["name"], "email": row["email"]}
+
+
+def rowToEvent(row):
+    return dict(row)
+
+
+def rowToTask(row):
+    task = dict(row)
+    task["eventTypes"] = json.loads(task.pop("event_types") or "[]")
+    if task.get("submission"):
+        task["submission"] = json.loads(task["submission"])
+    else:
+        task["submission"] = None
+    return task
+
+
 @app.route("/")
-def index():
-    return send_from_directory(USER_DIR, "index.html")
+def indexPage():
+    return send_from_directory(userDir, "index.html")
 
 
-@app.route("/img/<path:filename>")
-def serve_image(filename):
-    return send_from_directory(IMG_DIR, filename)
+@app.route("/img/<path:fileName>")
+def serveImage(fileName):
+    return send_from_directory(imgDir, fileName)
 
 
-@app.route("/<path:filename>")
-def serve_user_file(filename):
-    if os.path.isfile(os.path.join(USER_DIR, filename)):
-        return send_from_directory(USER_DIR, filename)
+@app.route("/<path:fileName>")
+def serveUserFile(fileName):
+    if os.path.isfile(os.path.join(userDir, fileName)):
+        return send_from_directory(userDir, fileName)
     return jsonify({"error": "Not found"}), 404
 
 
-@app.route("/api/products", methods=["GET"])
-def get_products():
-    conn = get_db_connection()
-    products = conn.execute("SELECT * FROM products ORDER BY id").fetchall()
-    conn.close()
-    return jsonify([row_to_product(p) for p in products])
+@app.route("/api/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
 
 
-@app.route("/api/products", methods=["POST"])
-def create_product():
+@app.route("/api/auth/signup", methods=["POST"])
+def authSignup():
     data = request.json or {}
-    conn = get_db_connection()
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    if not name or not email or not password:
+        return jsonify({"error": "All fields are required"}), 400
+    conn = getDb()
     try:
         conn.execute(
-            "INSERT INTO products (name, price, stock, image) VALUES (?, ?, ?, ?)",
-            (data["name"], data.get("price", 0), data.get("stock", 0), data.get("image", "")),
+            "INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, ?)",
+            (name, email, generate_password_hash(password), datetime.now().isoformat()),
         )
         conn.commit()
-        product = conn.execute(
-            "SELECT * FROM products WHERE name = ?", (data["name"],)
-        ).fetchone()
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
         conn.close()
-        return jsonify(row_to_product(product)), 201
+        return jsonify(rowToUser(user)), 201
     except sqlite3.IntegrityError:
         conn.close()
-        return jsonify({"error": "Product already exists"}), 400
+        return jsonify({"error": "Email already registered"}), 400
 
 
-@app.route("/api/products/<int:product_id>", methods=["PUT"])
-def update_product(product_id):
+@app.route("/api/auth/login", methods=["POST"])
+def authLogin():
     data = request.json or {}
-    conn = get_db_connection()
-    product = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    conn = getDb()
+    user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    conn.close()
+    if not user or not check_password_hash(user["password"], password):
+        return jsonify({"error": "Invalid email or password"}), 401
+    return jsonify(rowToUser(user))
+
+
+@app.route("/api/products", methods=["GET"])
+def getProducts():
+    conn = getDb()
+    rows = conn.execute("SELECT * FROM products ORDER BY id").fetchall()
+    conn.close()
+    return jsonify([rowToProduct(r) for r in rows])
+
+
+@app.route("/api/products/<int:productId>", methods=["PUT"])
+def updateProduct(productId):
+    data = request.json or {}
+    conn = getDb()
+    product = conn.execute("SELECT * FROM products WHERE id = ?", (productId,)).fetchone()
     if not product:
         conn.close()
         return jsonify({"error": "Product not found"}), 404
-
     stock = data.get("stock", product["stock"])
-    conn.execute("UPDATE products SET stock = ? WHERE id = ?", (stock, product_id))
+    conn.execute("UPDATE products SET stock = ? WHERE id = ?", (stock, productId))
     conn.commit()
-    updated = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    updated = conn.execute("SELECT * FROM products WHERE id = ?", (productId,)).fetchone()
     conn.close()
-    return jsonify(row_to_product(updated))
+    return jsonify(rowToProduct(updated))
 
 
-@app.route("/api/products/<int:product_id>/sold-out", methods=["PUT"])
-def mark_sold_out(product_id):
-    conn = get_db_connection()
-    conn.execute("UPDATE products SET stock = 0 WHERE id = ?", (product_id,))
+@app.route("/api/products/<int:productId>/sold-out", methods=["PUT"])
+def markSoldOut(productId):
+    conn = getDb()
+    conn.execute("UPDATE products SET stock = 0 WHERE id = ?", (productId,))
     conn.commit()
-    product = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
-    conn.close()
-    if not product:
-        return jsonify({"error": "Product not found"}), 404
-    return jsonify(row_to_product(product))
-
-
-@app.route("/api/products/<int:product_id>/pre-order", methods=["PUT"])
-def mark_pre_order(product_id):
-    conn = get_db_connection()
-    conn.execute("UPDATE products SET stock = 999 WHERE id = ?", (product_id,))
-    conn.commit()
-    product = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    product = conn.execute("SELECT * FROM products WHERE id = ?", (productId,)).fetchone()
     conn.close()
     if not product:
         return jsonify({"error": "Product not found"}), 404
-    return jsonify(row_to_product(product))
+    return jsonify(rowToProduct(product))
 
 
-@app.route("/api/products/<int:product_id>/restock", methods=["PUT"])
-def restock_product(product_id):
+@app.route("/api/products/<int:productId>/pre-order", methods=["PUT"])
+def markPreOrder(productId):
+    conn = getDb()
+    conn.execute("UPDATE products SET stock = 999 WHERE id = ?", (productId,))
+    conn.commit()
+    product = conn.execute("SELECT * FROM products WHERE id = ?", (productId,)).fetchone()
+    conn.close()
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+    return jsonify(rowToProduct(product))
+
+
+@app.route("/api/products/<int:productId>/restock", methods=["PUT"])
+def restockProduct(productId):
     data = request.json or {}
     amount = data.get("stock", 10)
-    conn = get_db_connection()
-    conn.execute("UPDATE products SET stock = ? WHERE id = ?", (amount, product_id))
+    conn = getDb()
+    conn.execute("UPDATE products SET stock = ? WHERE id = ?", (amount, productId))
     conn.commit()
-    product = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    product = conn.execute("SELECT * FROM products WHERE id = ?", (productId,)).fetchone()
     conn.close()
     if not product:
         return jsonify({"error": "Product not found"}), 404
-    return jsonify(row_to_product(product))
-
-
-@app.route("/api/products/<int:product_id>", methods=["DELETE"])
-def delete_product(product_id):
-    conn = get_db_connection()
-    conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
-    conn.commit()
-    conn.close()
-    return "", 204
+    return jsonify(rowToProduct(product))
 
 
 @app.route("/api/orders", methods=["GET"])
-def get_orders():
-    conn = get_db_connection()
+def getOrders():
+    conn = getDb()
     orders = conn.execute("SELECT * FROM orders ORDER BY id DESC").fetchall()
     result = []
     for order in orders:
@@ -238,13 +309,13 @@ def get_orders():
 
 
 @app.route("/api/orders", methods=["POST"])
-def create_order():
+def createOrder():
     data = request.json or {}
     items = data.get("items", [])
     if not items:
         return jsonify({"error": "Cart is empty"}), 400
 
-    conn = get_db_connection()
+    conn = getDb()
     try:
         for item in items:
             product = conn.execute(
@@ -253,10 +324,9 @@ def create_order():
             if not product:
                 raise ValueError(f"Product not found: {item['name']}")
             qty = int(item.get("qty", 1))
-            stock = product["stock"]
-            if stock == 0:
+            if product["stock"] == 0:
                 raise ValueError(f"{product['name']} is sold out")
-            if stock < 999 and qty > stock:
+            if product["stock"] < 999 and qty > product["stock"]:
                 raise ValueError(f"Not enough stock for {product['name']}")
 
         total = sum(int(i["price"]) * int(i["qty"]) for i in items)
@@ -281,7 +351,7 @@ def create_order():
                 now,
             ),
         )
-        order_id = cursor.lastrowid
+        orderId = cursor.lastrowid
 
         for item in items:
             product = conn.execute(
@@ -298,7 +368,7 @@ def create_order():
                    (order_id, product_id, product_name, quantity, size, unit_price)
                    VALUES (?, ?, ?, ?, ?, ?)""",
                 (
-                    order_id,
+                    orderId,
                     product["id"],
                     item["name"],
                     qty,
@@ -308,31 +378,168 @@ def create_order():
             )
 
         conn.commit()
-        order = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
-        order_items = conn.execute(
-            "SELECT * FROM order_items WHERE order_id = ?", (order_id,)
+        order = conn.execute("SELECT * FROM orders WHERE id = ?", (orderId,)).fetchone()
+        orderItems = conn.execute(
+            "SELECT * FROM order_items WHERE order_id = ?", (orderId,)
         ).fetchall()
         conn.close()
         result = dict(order)
-        result["items"] = [dict(i) for i in order_items]
+        result["items"] = [dict(i) for i in orderItems]
         return jsonify(result), 201
     except ValueError as e:
         conn.rollback()
         conn.close()
         return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        conn.rollback()
+
+
+@app.route("/api/events", methods=["GET"])
+def getEvents():
+    conn = getDb()
+    rows = conn.execute("SELECT * FROM events ORDER BY id DESC").fetchall()
+    conn.close()
+    return jsonify([rowToEvent(r) for r in rows])
+
+
+@app.route("/api/events", methods=["POST"])
+def createEvent():
+    data = request.json or {}
+    now = datetime.now().isoformat()
+    conn = getDb()
+    cursor = conn.execute(
+        """INSERT INTO events
+           (organizer_name, event_date, campus, phone, address_line, city,
+            province, postal, event_type, email, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            data.get("organizerName", ""),
+            data.get("eventDate", ""),
+            data.get("campus", ""),
+            data.get("phone", ""),
+            data.get("addressLine", ""),
+            data.get("city", ""),
+            data.get("province", ""),
+            data.get("postal", ""),
+            data.get("eventType", ""),
+            data.get("email", ""),
+            now,
+        ),
+    )
+    conn.commit()
+    event = conn.execute("SELECT * FROM events WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    conn.close()
+    return jsonify(rowToEvent(event)), 201
+
+
+@app.route("/api/events/<int:eventId>", methods=["PUT"])
+def updateEvent(eventId):
+    data = request.json or {}
+    conn = getDb()
+    conn.execute(
+        """UPDATE events SET organizer_name=?, event_date=?, campus=?, phone=?,
+           address_line=?, city=?, province=?, postal=?, event_type=?, email=?
+           WHERE id=?""",
+        (
+            data.get("organizerName", ""),
+            data.get("eventDate", ""),
+            data.get("campus", ""),
+            data.get("phone", ""),
+            data.get("addressLine", ""),
+            data.get("city", ""),
+            data.get("province", ""),
+            data.get("postal", ""),
+            data.get("eventType", ""),
+            data.get("email", ""),
+            eventId,
+        ),
+    )
+    conn.commit()
+    event = conn.execute("SELECT * FROM events WHERE id = ?", (eventId,)).fetchone()
+    conn.close()
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+    return jsonify(rowToEvent(event))
+
+
+@app.route("/api/events/<int:eventId>", methods=["DELETE"])
+def deleteEvent(eventId):
+    conn = getDb()
+    conn.execute("DELETE FROM events WHERE id = ?", (eventId,))
+    conn.commit()
+    conn.close()
+    return "", 204
+
+
+@app.route("/api/tasks", methods=["GET"])
+def getTasks():
+    conn = getDb()
+    rows = conn.execute("SELECT * FROM tasks ORDER BY id DESC").fetchall()
+    conn.close()
+    return jsonify([rowToTask(r) for r in rows])
+
+
+@app.route("/api/tasks", methods=["POST"])
+def createTask():
+    data = request.json or {}
+    now = datetime.now().isoformat()
+    conn = getDb()
+    cursor = conn.execute(
+        """INSERT INTO tasks
+           (officer_name, department, position, event_types, description,
+            deadline, status, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)""",
+        (
+            data.get("officerName", ""),
+            data.get("department", ""),
+            data.get("position", ""),
+            json.dumps(data.get("eventTypes", [])),
+            data.get("description", ""),
+            data.get("deadline", ""),
+            now,
+        ),
+    )
+    conn.commit()
+    task = conn.execute("SELECT * FROM tasks WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    conn.close()
+    return jsonify(rowToTask(task)), 201
+
+
+@app.route("/api/tasks/<int:taskId>", methods=["PUT"])
+def updateTask(taskId):
+    data = request.json or {}
+    conn = getDb()
+    task = conn.execute("SELECT * FROM tasks WHERE id = ?", (taskId,)).fetchone()
+    if not task:
         conn.close()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Task not found"}), 404
+
+    status = data.get("status", task["status"])
+    submission = data.get("submission")
+    completedAt = data.get("completedAt")
+    if submission is not None:
+        submission = json.dumps(submission)
+    else:
+        submission = task["submission"]
+
+    conn.execute(
+        """UPDATE tasks SET status=?, submission=?, completed_at=? WHERE id=?""",
+        (status, submission, completedAt, taskId),
+    )
+    conn.commit()
+    updated = conn.execute("SELECT * FROM tasks WHERE id = ?", (taskId,)).fetchone()
+    conn.close()
+    return jsonify(rowToTask(updated))
 
 
-@app.route("/api/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok"})
+@app.route("/api/tasks/<int:taskId>", methods=["DELETE"])
+def deleteTask(taskId):
+    conn = getDb()
+    conn.execute("DELETE FROM tasks WHERE id = ?", (taskId,))
+    conn.commit()
+    conn.close()
+    return "", 204
 
 
 if __name__ == "__main__":
-    init_db()
-    print("SmartCampus server running at http://localhost:5000")
-    print("Admin panel: http://localhost:5000/stocks.html")
+    initDb()
+    print("SmartCampus server: http://localhost:5000")
     app.run(debug=True, host="0.0.0.0", port=5000)

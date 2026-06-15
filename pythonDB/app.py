@@ -108,6 +108,10 @@ def initDb():
     if "image" not in cols:
         conn.execute("ALTER TABLE products ADD COLUMN image TEXT NOT NULL DEFAULT ''")
 
+    taskCols = {row[1] for row in conn.execute("PRAGMA table_info(tasks)").fetchall()}
+    if taskCols and "attachment" not in taskCols:
+        conn.execute("ALTER TABLE tasks ADD COLUMN attachment TEXT")
+
     conn.execute("DELETE FROM products WHERE name IN ('Laptop', 'Phone', 'Tablet')")
     for p in shopProducts:
         row = conn.execute("SELECT id FROM products WHERE name = ?", (p["name"],)).fetchone()
@@ -169,6 +173,10 @@ def rowToTask(row):
         task["submission"] = json.loads(task["submission"])
     else:
         task["submission"] = None
+    if task.get("attachment"):
+        task["attachment"] = json.loads(task["attachment"])
+    else:
+        task["attachment"] = None
     return task
 
 
@@ -482,11 +490,13 @@ def createTask():
     data = request.json or {}
     now = datetime.now().isoformat()
     conn = getDb()
+    attachment = data.get("attachment")
+    attachmentJson = json.dumps(attachment) if attachment else None
     cursor = conn.execute(
         """INSERT INTO tasks
            (officer_name, department, position, event_types, description,
-            deadline, status, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)""",
+            deadline, status, attachment, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)""",
         (
             data.get("officerName", ""),
             data.get("department", ""),
@@ -494,6 +504,7 @@ def createTask():
             json.dumps(data.get("eventTypes", [])),
             data.get("description", ""),
             data.get("deadline", ""),
+            attachmentJson,
             now,
         ),
     )

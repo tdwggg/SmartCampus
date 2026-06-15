@@ -18,7 +18,15 @@
     .taskItem.overdue { border-left: 4px solid #dc3545; }
     .checkboxGroup { background: rgba(255,255,255,0.08); padding: 16px; border-radius: 12px; margin-bottom: 16px; }
     .checkboxItem { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,0.92); border-radius: 10px; margin-bottom: 8px; color: #222; cursor: pointer; }
-    .tasksList { max-height: 560px; overflow-y: auto; }
+    .tasksList { overflow: visible; }
+    .fileAttachGroup { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .fileAttachBtn {
+      background: linear-gradient(135deg, #1a5778, #007bff);
+      color: #fff; padding: 8px 16px; border-radius: 20px;
+      cursor: pointer; font-weight: 600; font-size: 0.9rem;
+    }
+    .fileAttachBtn:hover { opacity: 0.9; }
+    #taskFile { display: none; }
     .pageSection .glassCard { color: #212529; }
     .pageSection h3 { color: #fff; }
   </style>
@@ -60,6 +68,16 @@
               <div class="mb-3">
                 <label class="form-label fw-semibold">Description</label>
                 <textarea class="form-control formControlRound" id="taskDescription" rows="3" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Attach File</label>
+                <div class="fileAttachGroup">
+                  <input type="file" id="taskFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt">
+                  <label for="taskFile" class="fileAttachBtn mb-0">
+                    <i class="fas fa-paperclip me-1"></i>Choose File
+                  </label>
+                  <span id="taskFileName" class="small text-muted">No file chosen</span>
+                </div>
               </div>
               <div class="mb-3">
                 <label class="form-label fw-semibold">Deadline</label>
@@ -125,9 +143,28 @@
               <button class="btn btn-sm btn-success" onclick="submitTask(${t.id})">Submit</button>
               <button class="btn btn-sm btn-danger" onclick="removeTask(${t.id})">Delete</button>
             </div>
+            ${t.attachment ? `<div class="mt-2 small"><i class="fas fa-paperclip me-1"></i>${t.attachment.fileName || "Attachment"}</div>` : ""}
             ${t.submission ? `<div class="mt-2 small bg-white bg-opacity-25 p-2 rounded"><strong>Submission:</strong> ${t.submission.description || ""}</div>` : ""}
           </div>`;
       }).join("");
+    }
+
+    document.getElementById("taskFile").addEventListener("change", function() {
+      document.getElementById("taskFileName").textContent =
+        this.files[0] ? this.files[0].name : "No file chosen";
+    });
+
+    function readTaskFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve({
+          fileName: file.name,
+          fileUrl: ev.target.result,
+          filePreview: file.type.startsWith("image/") ? ev.target.result : null
+        });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
     }
 
     document.getElementById("taskForm").addEventListener("submit", async (e) => {
@@ -135,15 +172,25 @@
       const eventTypes = Array.from(document.querySelectorAll("#taskForm input[type=checkbox]:checked")).map(cb => cb.value);
       if (!eventTypes.length) { alert("Select at least one event type"); return; }
       try {
-        await apiPost("/api/tasks", {
+        const payload = {
           officerName: document.getElementById("taskName").value.trim(),
           department: document.getElementById("taskDepartment").value,
           position: document.getElementById("taskPosition").value.trim(),
           eventTypes,
           description: document.getElementById("taskDescription").value.trim(),
           deadline: document.getElementById("taskDeadline").value
-        });
+        };
+        const fileInput = document.getElementById("taskFile");
+        if (fileInput.files[0]) {
+          if (fileInput.files[0].size > 10 * 1024 * 1024) {
+            alert("File too large. Maximum 10MB.");
+            return;
+          }
+          payload.attachment = await readTaskFile(fileInput.files[0]);
+        }
+        await apiPost("/api/tasks", payload);
         taskForm.reset();
+        document.getElementById("taskFileName").textContent = "No file chosen";
         setDefaultDeadline();
         showToast("Task assigned");
         await loadTasks();

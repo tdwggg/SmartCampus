@@ -3,8 +3,6 @@ const navItems = [
   { href: "about.html", label: "About", icon: "fa-info-circle", id: "about" },
   { href: "shop.html", label: "Shop", icon: "fa-shopping-bag", id: "shop" },
   { href: "task.html", label: "Tasks", icon: "fa-tasks", id: "task" },
-  { href: "loginsignup.html", label: "Login", icon: "fa-user", id: "login" },
-  { href: "stocks.html", label: "Stocks", icon: "fa-boxes", id: "stocks" },
 ];
 
 function toggleSidebar() {
@@ -80,7 +78,7 @@ function initNav(activePage, options = {}) {
   if (!root) return;
 
   const showCart = options.showCart === true;
-  const brand = options.brand || "CampusShop";
+  const brand = "SmartCampus";
   const cartCanvas = document.getElementById("cartCanvas");
   const cartBtn = showCart && cartCanvas ? `
     <button class="btn btn-light btn-sm me-1" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas" type="button">
@@ -143,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (root) {
     initNav(root.dataset.page || "home", {
       showCart: root.dataset.cart === "true",
-      brand: root.dataset.brand || "CampusShop",
       showUser: root.dataset.user !== "false",
     });
   }

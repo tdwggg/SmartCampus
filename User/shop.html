@@ -7,6 +7,24 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
+<script src="js/api.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const bg = imgPath("PUPSTC.jpg");
+  document.querySelectorAll(".hero, .products, .offcanvas#cartCanvas").forEach(el => {
+    el.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${bg}')`;
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+    if (el.classList.contains("offcanvas")) {
+      el.style.background = `linear-gradient(rgba(15,23,42,0.98), rgba(15,23,42,0.98)), url('${bg}') center/cover no-repeat`;
+    }
+  });
+  document.querySelectorAll(".product-img").forEach(img => {
+    const file = img.getAttribute("data-img");
+    if (file) img.src = imgPath(file);
+  });
+});
+</script>
 <style>
 body { margin:0; font-family: Arial; background:#0f172a; }
 .navbar-custom { background:#1a5778b7; backdrop-filter: blur(10px); }
@@ -14,7 +32,7 @@ body { margin:0; font-family: Arial; background:#0f172a; }
 
 .hero {
     height: 70vh;
-    background: url('PUPSTC.jpg') center/cover no-repeat fixed;
+    background: #0f172a center/cover no-repeat fixed;
     display:flex; align-items:center;
     padding-left: 60px;
     color:white;
@@ -29,7 +47,7 @@ body { margin:0; font-family: Arial; background:#0f172a; }
 
 .products {
     padding: 60px 40px;
-    background: url('PUPSTC.jpg') center/cover no-repeat fixed;
+    background: #0f172a center/cover no-repeat fixed;
     position: relative;
 }
 .products::before {
@@ -72,8 +90,7 @@ padding:2px 6px;
 
 /* CART SIDEBAR - WORKING BACKGROUND */
 .offcanvas#cartCanvas {
-    background: linear-gradient(rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.98)), 
-                url('PUPSTC.jpg') center/cover no-repeat !important;
+    background: #0f172a center/cover no-repeat !important;
 }
 
 .offcanvas-header {
@@ -333,7 +350,7 @@ padding:2px 6px;
 
 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
 <div class="card text-center p-2" data-product="ITECH Lace">
-<img src="ITECHlace.png" class="product-img">
+<img src="" data-img="ITECHlace.png" class="product-img" alt="ITECH Lace">
 <div class="card-body">
 <h6>ITECH Lace salamat joyce</h6>
 <p class="price">₱100</p>
@@ -355,7 +372,7 @@ padding:2px 6px;
 
 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
 <div class="card text-center p-2" data-product="ITECH Sleeveless">
-<img src="ITECHSLEEVELES.jpg" class="product-img">
+<img src="" data-img="ITECHSLEEVELES.jpg" class="product-img" alt="ITECH Sleeveless">
 <div class="card-body">
 <h6>ITECH Sleeveless</h6>
 <p class="price">₱450</p>
@@ -382,7 +399,7 @@ padding:2px 6px;
 
 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
 <div class="card text-center p-2" data-product="ITECH T-Shirt">
-<img src="ITECHTSHIRT.jpg" class="product-img">
+<img src="" data-img="ITECHTSHIRT.jpg" class="product-img" alt="ITECH T-Shirt">
 <div class="card-body">
 <h6>ITECH T-Shirt</h6>
 <p class="price">₱450</p>
@@ -410,7 +427,7 @@ padding:2px 6px;
 
 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
 <div class="card text-center p-2" data-product="ORG Shirt">
-<img src="ORGSHIRT.png" class="product-img">
+<img src="" data-img="ORGSHIRT.png" class="product-img" alt="ORG Shirt">
 <div class="card-body">
 <h6>ORG Shirt</h6>
 <p class="price">₱550</p>
@@ -438,7 +455,7 @@ padding:2px 6px;
 
 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
 <div class="card text-center p-2" data-product="PUP Lace">
-<img src="PUPlace.jpg" class="product-img">
+<img src="" data-img="PUPlace.jpg" class="product-img" alt="PUP Lace">
 <div class="card-body">
 <h6>PUP Lace</h6>
 <p class="price">₱100</p>
@@ -460,7 +477,7 @@ padding:2px 6px;
 
 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
 <div class="card text-center p-2" data-product="PUP Shirt">
-<img src="TANGLAW.webp" class="product-img">
+<img src="" data-img="TANGLAW.webp" class="product-img" alt="PUP Shirt">
 <div class="card-body">
 <h6>PUP Shirt</h6>
 <p class="price">₱250</p>
@@ -601,7 +618,7 @@ padding:2px 6px;
             </div>
           </div>
           <button type="submit" class="checkout-btn mt-3 mb-1">Confirm order</button>
-          <p class="small text-muted text-center mb-0">Demo checkout — order details are not sent to a server.</p>
+          <p class="small text-muted text-center mb-0">Order is saved to the campus database when confirmed.</p>
         </form>
       </div>
     </div>
@@ -610,374 +627,359 @@ padding:2px 6px;
 
 <script>
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let products = JSON.parse(localStorage.getItem("products")) || [];
+let products = [];
 
+const PRODUCT_IMAGES = {
+  "ITECH Lace": "ITECHlace.png",
+  "ITECH Sleeveless": "ITECHSLEEVELES.jpg",
+  "ITECH T-Shirt": "ITECHTSHIRT.jpg",
+  "ORG Shirt": "ORGSHIRT.png",
+  "PUP Lace": "PUPlace.jpg",
+  "PUP Shirt": "TANGLAW.webp"
+};
 
-if (products.length === 0) {
-    products = [
-        {name: "ITECH Lace", stock: 10},
-        {name: "ITECH Sleeveless", stock: 10},
-        {name: "ITECH T-Shirt", stock: 10},
-        {name: "ORG Shirt", stock: 10},
-        {name: "PUP Lace", stock: 10},
-        {name: "PUP Shirt", stock: 10}
-    ];
-    localStorage.setItem("products", JSON.stringify(products));
+async function loadProductsFromAPI() {
+  try {
+    products = await apiGet("/api/products");
+    updateStockDisplay();
+  } catch (e) {
+    console.error("Failed to load products:", e);
+    alert("Cannot connect to the shop database. Start the Python server (python app.py in pythonDB folder).");
+  }
+}
+
+function getProduct(name) {
+  return products.find(p => p.name === name);
 }
 
 function updateStockDisplay() {
-    products.forEach(product => {
-        let card = document.querySelector(`[data-product="${product.name}"]`);
-        if (card) {
-            let stockSpan = card.querySelector(".stock-display");
-            let qtyInput = card.querySelector(".qty");
-            let addBtn = card.querySelector(".addCart");
-            let buyBtn = card.querySelector(".buyNow");
-            
-            let stockClass = '';
-            let stockText = product.stock;
-            
-            if (product.stock === 0) {
-                stockClass = 'stock-out';
-                stockText = 'SOLD OUT';
-                if (addBtn) addBtn.style.display = 'none';
-                if (buyBtn) buyBtn.style.display = 'none';
-            } else if (product.stock === 999) {
-                stockClass = 'pre-order';
-                stockText = 'PRE-ORDER';
-                if (addBtn) addBtn.style.display = 'block';
-                if (buyBtn) buyBtn.style.display = 'block';
-            } else {
-                stockClass = product.stock <= 5 ? 'stock-low' : 'stock-ok';
-                stockText = product.stock;
-                if (addBtn) addBtn.style.display = 'block';
-                if (buyBtn) buyBtn.style.display = 'block';
-            }
-            
-            stockSpan.textContent = stockText;
-            stockSpan.className = `stock-display ${stockClass}`;
-            
-            if (qtyInput) {
-                qtyInput.max = product.stock;
-            }
-        }
-    });
+  products.forEach(product => {
+    const card = document.querySelector(`[data-product="${product.name}"]`);
+    if (!card) return;
+
+    const stockSpan = card.querySelector(".stock-display");
+    const qtyInput = card.querySelector(".qty");
+    const addBtn = card.querySelector(".addCart");
+    const buyBtn = card.querySelector(".buyNow");
+
+    let stockClass = "";
+    let stockText = product.stock;
+
+    if (product.stock === 0) {
+      stockClass = "stock-out";
+      stockText = "SOLD OUT";
+      if (addBtn) addBtn.style.display = "none";
+      if (buyBtn) buyBtn.style.display = "none";
+    } else if (product.stock >= 999) {
+      stockClass = "pre-order";
+      stockText = "PRE-ORDER";
+      if (addBtn) addBtn.style.display = "block";
+      if (buyBtn) buyBtn.style.display = "block";
+    } else {
+      stockClass = product.stock <= 5 ? "stock-low" : "stock-ok";
+      stockText = product.stock;
+      if (addBtn) addBtn.style.display = "block";
+      if (buyBtn) buyBtn.style.display = "block";
+    }
+
+    stockSpan.textContent = stockText;
+    stockSpan.className = `stock-display ${stockClass}`;
+
+    if (qtyInput) {
+      qtyInput.max = product.stock >= 999 ? 99 : product.stock;
+    }
+  });
 }
 
+function updateCart() {
+  const cartItems = document.getElementById("cartItems");
+  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const clearBtn = document.getElementById("clearAllBtn");
+  const totalEl = document.getElementById("total");
+  const checkoutBtn = document.getElementById("checkoutBtn");
 
-function updateCart(){
-    let cartItems = document.getElementById("cartItems");
-    let total = 0;
-    let clearBtn = document.getElementById("clearAllBtn");
-    let totalEl = document.getElementById("total");
-    let checkoutBtn = document.getElementById("checkoutBtn");
-    
-    cartItems.innerHTML = "";
+  cartItems.innerHTML = cart.map((item, index) => `
+    <div class="cart-item" data-index="${index}">
+      <img src="${imgPath(PRODUCT_IMAGES[item.name] || "PUPSTC.jpg")}" alt="${item.name}">
+      <div class="cart-item-info">
+        <strong>${item.name}</strong><br>
+        <small class="text-muted">Size: ${item.size}</small>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+          <input type="number" class="qty-input" value="${item.qty}" min="1" onchange="updateQtyInput(${index}, this.value)">
+          <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+          <button class="remove-btn ms-2" onclick="removeItem(${index})">Remove</button>
+        </div>
+        <div class="mt-2 fw-bold text-danger fs-5">₱${(item.price * item.qty).toLocaleString()}</div>
+      </div>
+    </div>`).join("");
 
-    cart.forEach((item, index) => {
-        total += item.price * item.qty;
-
-        cartItems.innerHTML += `
-        <div class="cart-item" data-index="${index}">
-            <img src="${getProductImage(item.name)}" alt="${item.name}">
-            <div class="cart-item-info">
-                <strong>${item.name}</strong><br>
-                <small class="text-muted">Size: ${item.size}</small>
-                <div class="qty-controls">
-                    <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
-                    <input type="number" class="qty-input" value="${item.qty}" min="1" onchange="updateQtyInput(${index}, this.value)">
-                    <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
-                                        <button class="remove-btn ms-2" onclick="removeItem(${index})">Remove</button>
-                </div>
-                <div class="mt-2 fw-bold text-danger fs-5">
-                    ₱${(item.price * item.qty).toLocaleString()}
-                </div>
-            </div>
-        </div>`;
-    });
-
-    totalEl.innerText = total.toLocaleString();
-    document.querySelectorAll(".js-cart-count").forEach(el => { el.textContent = cart.length; });
-    clearBtn.style.display = cart.length > 0 ? 'block' : 'none';
-    if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
-    localStorage.setItem("cart", JSON.stringify(cart));
+  totalEl.innerText = total.toLocaleString();
+  document.querySelectorAll(".js-cart-count").forEach(el => { el.textContent = cart.length; });
+  clearBtn.style.display = cart.length > 0 ? "block" : "none";
+  if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-
-function getProductImage(name) {
-    const images = {
-        'ITECH Lace': 'ITECHlace.png',
-        'ITECH Sleeveless': 'ITECHSLEEVELES.jpg',
-        'ITECH T-Shirt': 'ITECHTSHIRT.jpg',
-        'ORG Shirt': 'ORGSHIRT.png',
-        'PUP Lace': 'PUPlace.jpg',
-        'PUP Shirt': 'TANGLAW.webp'
-    };
-    return images[name] || 'PUPSTC.jpg';
+function getAvailableStock(name, excludeCartQty) {
+  const product = getProduct(name);
+  if (!product) return 0;
+  if (product.stock >= 999) return 99;
+  const inCart = cart.filter(i => i.name === name).reduce((s, i) => s + i.qty, 0);
+  return product.stock - inCart + (excludeCartQty || 0);
 }
-
 
 function updateQty(index, change) {
-    if (cart[index]) {
-        let productName = cart[index].name;
-        let product = products.find(p => p.name === productName);
-        let availableStock = product ? product.stock : 0;
-        let maxQty = availableStock + cart[index].qty;
-        
-        cart[index].qty = Math.max(1, Math.min(maxQty, cart[index].qty + change));
-        updateCart();
-    }
+  if (!cart[index]) return;
+  const name = cart[index].name;
+  const maxQty = getAvailableStock(name, cart[index].qty);
+  cart[index].qty = Math.max(1, Math.min(maxQty, cart[index].qty + change));
+  updateCart();
 }
 
 function updateQtyInput(index, value) {
-    if (cart[index]) {
-        let productName = cart[index].name;
-        let product = products.find(p => p.name === productName);
-        let availableStock = product ? product.stock : 0;
-        let qty = parseInt(value) || 1;
-        let maxQty = availableStock + cart[index].qty;
-        
-        cart[index].qty = Math.max(1, Math.min(maxQty, qty));
-        updateCart();
-    }
+  if (!cart[index]) return;
+  const name = cart[index].name;
+  const maxQty = getAvailableStock(name, cart[index].qty);
+  const qty = parseInt(value, 10) || 1;
+  cart[index].qty = Math.max(1, Math.min(maxQty, qty));
+  updateCart();
 }
-
 
 function removeItem(index) {
-    cart.splice(index, 1);
-    updateCart();
+  cart.splice(index, 1);
+  updateCart();
 }
 
-
 document.getElementById("clearAllBtn").onclick = function() {
-    cart = [];
-    updateCart();
+  cart = [];
+  updateCart();
 };
 
+document.querySelectorAll(".addCart").forEach(btn => {
+  btn.onclick = function() {
+    const card = this.closest(".card");
+    const productName = this.dataset.name;
+    const qty = parseInt(card.querySelector(".qty").value, 10) || 1;
+    const available = getAvailableStock(productName);
 
-document.querySelectorAll(".addCart").forEach(btn=>{
-    btn.onclick = function(){
-        let card = this.closest(".card");
-        let productName = this.dataset.name;
-        let qty = parseInt(card.querySelector(".qty").value);
-        
-        // Get current stock from localStorage
-        let product = products.find(p => p.name === productName);
-        let stock = product ? product.stock : 0;
-        
-        if (qty > stock || stock === 0) {
-            alert("Not enough stock!");
-            return;
-        }
-        
-        
-        if (product) {
-            product.stock -= qty;
-            localStorage.setItem("products", JSON.stringify(products));
-        }
-        
-        
-        updateStockDisplay();
-        
-        const sizeEl = card.querySelector(".size");
-        cart.push({
-            name: productName,
-            price: parseInt(this.dataset.price),
-            qty: qty,
-            size: sizeEl ? sizeEl.value : "Default"
-        });
-
-        updateCart();
+    if (available === 0) {
+      alert("Not enough stock!");
+      return;
     }
+    if (qty > available) {
+      alert(`Only ${available} available.`);
+      return;
+    }
+
+    const sizeEl = card.querySelector(".size");
+    const existing = cart.find(i => i.name === productName && i.size === (sizeEl ? sizeEl.value : "Default"));
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      cart.push({
+        name: productName,
+        price: parseInt(this.dataset.price, 10),
+        qty,
+        size: sizeEl ? sizeEl.value : "Default"
+      });
+    }
+    updateCart();
+  };
 });
 
-
-document.querySelectorAll(".buyNow").forEach(btn=>{
-    btn.onclick = function(){
-        this.closest(".card").querySelector(".addCart").click();
-        new bootstrap.Offcanvas(document.getElementById('cartCanvas')).show();
-    }
+document.querySelectorAll(".buyNow").forEach(btn => {
+  btn.onclick = function() {
+    this.closest(".card").querySelector(".addCart").click();
+    new bootstrap.Offcanvas(document.getElementById("cartCanvas")).show();
+  };
 });
 
 const CHECKOUT_PREFS_KEY = "shopCheckoutPrefs";
 
 function loadCheckoutPrefs() {
-    try {
-        const raw = localStorage.getItem(CHECKOUT_PREFS_KEY);
-        return raw ? JSON.parse(raw) : {};
-    } catch (e) { return {}; }
+  try {
+    const raw = localStorage.getItem(CHECKOUT_PREFS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
 }
 
 function saveCheckoutPrefs(p) {
-    localStorage.setItem(CHECKOUT_PREFS_KEY, JSON.stringify(p));
+  localStorage.setItem(CHECKOUT_PREFS_KEY, JSON.stringify(p));
 }
 
 function applyCheckoutPrefsToForm() {
-    const p = loadCheckoutPrefs();
-    const ids = ["chkFullName","chkPhone","chkCampus","chkAddress","chkCity","chkProvince","chkPostal"];
-    ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && p[id]) el.value = p[id];
+  const p = loadCheckoutPrefs();
+  ["chkFullName","chkPhone","chkCampus","chkAddress","chkCity","chkProvince","chkPostal"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && p[id]) el.value = p[id];
+  });
+  if (p.shopPayment) {
+    document.querySelectorAll('input[name="shopPayment"]').forEach(r => {
+      r.checked = r.value === p.shopPayment;
     });
-    if (p.shopPayment) {
-        document.querySelectorAll('input[name="shopPayment"]').forEach(r => { r.checked = r.value === p.shopPayment; });
-    }
-    updatePaymentDetails();
-    updatePaymentDetails();
-    if (p.gcashNumber) document.getElementById("gcashNumber").value = p.gcashNumber;
-    if (p.gcashReference) document.getElementById("gcashReference").value = p.gcashReference;
-    if (p.bankName) document.getElementById("bankName").value = p.bankName;
-    if (p.bankAccountName) document.getElementById("bankAccountName").value = p.bankAccountName;
-    if (p.bankAccountNumber) document.getElementById("bankAccountNumber").value = p.bankAccountNumber;
-    if (p.bankReference) document.getElementById("bankReference").value = p.bankReference;
-    if (p.chkCampus) applyCampusAddress(p.chkCampus);
+  }
+  updatePaymentDetails();
+  if (p.gcashNumber) document.getElementById("gcashNumber").value = p.gcashNumber;
+  if (p.gcashReference) document.getElementById("gcashReference").value = p.gcashReference;
+  if (p.bankName) document.getElementById("bankName").value = p.bankName;
+  if (p.bankAccountName) document.getElementById("bankAccountName").value = p.bankAccountName;
+  if (p.bankAccountNumber) document.getElementById("bankAccountNumber").value = p.bankAccountNumber;
+  if (p.bankReference) document.getElementById("bankReference").value = p.bankReference;
+  if (p.chkCampus) applyCampusAddress(p.chkCampus);
 }
 
 const campusAddressMap = {
-    "PUP Sta. Mesa": { city: "Manila", province: "Metro Manila", postalCode: "1016" },
-    "PUP Taguig": { city: "Taguig City", province: "Metro Manila", postalCode: "1630" },
-    "PUP Quezon City": { city: "Quezon City", province: "Metro Manila", postalCode: "1100" },
-    "PUP San Juan": { city: "San Juan City", province: "Metro Manila", postalCode: "1500" },
-    "PUP Parañaque": { city: "Parañaque City", province: "Metro Manila", postalCode: "1700" },
-    "PUP Bataan": { city: "Balanga", province: "Bataan", postalCode: "2100" },
-    "PUP Bulacan": { city: "Malolos", province: "Bulacan", postalCode: "3000" },
-    "PUP Nueva Ecija": { city: "Cabanatuan", province: "Nueva Ecija", postalCode: "3100" },
-    "PUP Cavite": { city: "Maragondon", province: "Cavite", postalCode: "4112" },
-    "PUP Laguna": { city: "Santa Cruz", province: "Laguna", postalCode: "4009" },
-    "PUP Sto. Tomas": { city: "Sto. Tomas City", province: "Batangas", postalCode: "4234" },
-    "PUP Talisay": { city: "Talisay", province: "Batangas", postalCode: "4220" },
-    "PUP Lopez": { city: "Lopez", province: "Quezon", postalCode: "4316" },
-    "PUP Mindoro": { city: "Calapan", province: "Oriental Mindoro", postalCode: "5200" },
-    "PUP Ragay": { city: "Ragay", province: "Camarines Sur", postalCode: "4410" },
-    "PUP Maragondon": { city: "Maragondon", province: "Cavite", postalCode: "4112" }
+  "PUP Sta. Mesa": { city: "Manila", province: "Metro Manila", postalCode: "1016" },
+  "PUP Taguig": { city: "Taguig City", province: "Metro Manila", postalCode: "1630" },
+  "PUP Quezon City": { city: "Quezon City", province: "Metro Manila", postalCode: "1100" },
+  "PUP San Juan": { city: "San Juan City", province: "Metro Manila", postalCode: "1500" },
+  "PUP Parañaque": { city: "Parañaque City", province: "Metro Manila", postalCode: "1700" },
+  "PUP Bataan": { city: "Balanga", province: "Bataan", postalCode: "2100" },
+  "PUP Bulacan": { city: "Malolos", province: "Bulacan", postalCode: "3000" },
+  "PUP Nueva Ecija": { city: "Cabanatuan", province: "Nueva Ecija", postalCode: "3100" },
+  "PUP Cavite": { city: "Maragondon", province: "Cavite", postalCode: "4112" },
+  "PUP Laguna": { city: "Santa Cruz", province: "Laguna", postalCode: "4009" },
+  "PUP Sto. Tomas": { city: "Sto. Tomas City", province: "Batangas", postalCode: "4234" },
+  "PUP Talisay": { city: "Talisay", province: "Batangas", postalCode: "4220" },
+  "PUP Lopez": { city: "Lopez", province: "Quezon", postalCode: "4316" },
+  "PUP Mindoro": { city: "Calapan", province: "Oriental Mindoro", postalCode: "5200" },
+  "PUP Ragay": { city: "Ragay", province: "Camarines Sur", postalCode: "4410" },
+  "PUP Maragondon": { city: "Maragondon", province: "Cavite", postalCode: "4112" }
 };
 
 const campusSelect = document.getElementById("chkCampus");
-const campusCity = document.getElementById("chkCity");
-const campusProvince = document.getElementById("chkProvince");
-const campusPostal = document.getElementById("chkPostal");
 
 function applyCampusAddress(campusValue) {
-    const address = campusAddressMap[campusValue];
-    if (address) {
-        campusCity.value = address.city;
-        campusProvince.value = address.province;
-        campusPostal.value = address.postalCode;
-    } else {
-        campusCity.value = "";
-        campusProvince.value = "";
-        campusPostal.value = "";
-    }
+  const address = campusAddressMap[campusValue];
+  if (address) {
+    document.getElementById("chkCity").value = address.city;
+    document.getElementById("chkProvince").value = address.province;
+    document.getElementById("chkPostal").value = address.postalCode;
+  }
 }
 
-const cardTypeMap = {
-    "Visa": { name: "Visa" },
-    "Mastercard": { name: "Mastercard" },
-    "Amex": { name: "American Express" },
-    "Debit Card": { name: "Debit Card" }
-};
-
 function updatePaymentDetails() {
-    const selected = document.querySelector('input[name="shopPayment"]:checked');
-    const paymentDetails = document.getElementById("paymentDetails");
-    const gcashFields = document.getElementById("gcashFields");
-    const bankFields = document.getElementById("bankFields");
-
-    paymentDetails.style.display = selected && (selected.value === "Maya" || selected.value === "Card") ? "block" : "none";
-    gcashFields.style.display = selected && selected.value === "Maya" ? "block" : "none";
-    bankFields.style.display = selected && selected.value === "Card" ? "block" : "none";
+  const selected = document.querySelector('input[name="shopPayment"]:checked');
+  const paymentDetails = document.getElementById("paymentDetails");
+  const gcashFields = document.getElementById("gcashFields");
+  const bankFields = document.getElementById("bankFields");
+  const show = selected && (selected.value === "Maya" || selected.value === "Card");
+  paymentDetails.style.display = show ? "block" : "none";
+  gcashFields.style.display = selected && selected.value === "Maya" ? "block" : "none";
+  bankFields.style.display = selected && selected.value === "Card" ? "block" : "none";
 }
 
 function updateBankDetails() {
-    const selectedCard = document.getElementById("bankName").value;
-    const bankDetails = document.getElementById("bankDetails");
-    const bankAcctName = document.getElementById("bankAcctName");
-
-    if (selectedCard && cardTypeMap[selectedCard]) {
-        const cardInfo = cardTypeMap[selectedCard];
-        bankAcctName.textContent = cardInfo.name;
-        bankDetails.style.display = "block";
-    } else {
-        bankDetails.style.display = "none";
-    }
+  const selectedCard = document.getElementById("bankName").value;
+  const bankDetails = document.getElementById("bankDetails");
+  const bankAcctName = document.getElementById("bankAcctName");
+  if (selectedCard) {
+    bankAcctName.textContent = selectedCard;
+    bankDetails.style.display = "block";
+  } else {
+    bankDetails.style.display = "none";
+  }
 }
 
 if (campusSelect) {
-    campusSelect.addEventListener("change", function() {
-        applyCampusAddress(this.value);
-    });
+  campusSelect.addEventListener("change", function() { applyCampusAddress(this.value); });
 }
-
 document.getElementById("bankName").addEventListener("change", updateBankDetails);
-
 document.querySelectorAll('input[name="shopPayment"]').forEach(radio => {
-    radio.addEventListener("change", updatePaymentDetails);
+  radio.addEventListener("change", updatePaymentDetails);
 });
 
 document.getElementById("checkoutBtn").addEventListener("click", function() {
-    if (cart.length === 0) return;
-    applyCheckoutPrefsToForm();
-    const oc = bootstrap.Offcanvas.getInstance(document.getElementById("cartCanvas"));
-    if (oc) oc.hide();
-    new bootstrap.Modal(document.getElementById("checkoutModal")).show();
+  if (cart.length === 0) return;
+  if (!sessionStorage.getItem("isAuthenticated")) {
+    alert("Please log in first. Go to Home and sign in from the user menu.");
+    window.location.href = "index.html";
+    return;
+  }
+  applyCheckoutPrefsToForm();
+  const loggedIn = sessionStorage.getItem("isAuthenticated");
+  if (loggedIn) {
+    const email = sessionStorage.getItem("currentUser");
+    const users = JSON.parse(localStorage.getItem("users") || "{}");
+    if (users[email]?.name) {
+      document.getElementById("chkFullName").value = users[email].name;
+    }
+  }
+  const oc = bootstrap.Offcanvas.getInstance(document.getElementById("cartCanvas"));
+  if (oc) oc.hide();
+  new bootstrap.Modal(document.getElementById("checkoutModal")).show();
 });
 
-document.getElementById("checkoutForm").addEventListener("submit", function(ev) {
-    ev.preventDefault();
-    const pay = document.querySelector('input[name="shopPayment"]:checked');
-    const prefs = {
-        chkFullName: document.getElementById("chkFullName").value.trim(),
-        chkPhone: document.getElementById("chkPhone").value.trim(),
-        chkCampus: document.getElementById("chkCampus").value,
-        chkAddress: document.getElementById("chkAddress").value.trim(),
-        chkCity: document.getElementById("chkCity").value.trim(),
-        chkProvince: document.getElementById("chkProvince").value.trim(),
-        chkPostal: document.getElementById("chkPostal").value.trim(),
-        shopPayment: pay ? pay.value : "",
-        gcashNumber: document.getElementById("gcashNumber").value.trim(),
-        gcashReference: document.getElementById("gcashReference").value.trim(),
-        bankName: document.getElementById("bankName").value,
-        bankAccountName: document.getElementById("bankAccountName").value.trim(),
-        bankAccountNumber: document.getElementById("bankAccountNumber").value.trim(),
-        bankReference: document.getElementById("bankReference").value.trim()
-    };
+document.getElementById("checkoutForm").addEventListener("submit", async function(ev) {
+  ev.preventDefault();
+  const pay = document.querySelector('input[name="shopPayment"]:checked');
+  const prefs = {
+    chkFullName: document.getElementById("chkFullName").value.trim(),
+    chkPhone: document.getElementById("chkPhone").value.trim(),
+    chkCampus: document.getElementById("chkCampus").value,
+    chkAddress: document.getElementById("chkAddress").value.trim(),
+    chkCity: document.getElementById("chkCity").value.trim(),
+    chkProvince: document.getElementById("chkProvince").value.trim(),
+    chkPostal: document.getElementById("chkPostal").value.trim(),
+    shopPayment: pay ? pay.value : "",
+    gcashNumber: document.getElementById("gcashNumber").value.trim(),
+    gcashReference: document.getElementById("gcashReference").value.trim(),
+    bankName: document.getElementById("bankName").value,
+    bankAccountName: document.getElementById("bankAccountName").value.trim(),
+    bankAccountNumber: document.getElementById("bankAccountNumber").value.trim(),
+    bankReference: document.getElementById("bankReference").value.trim()
+  };
 
-    if (pay && pay.value === "Maya") {
-        if (!prefs.gcashNumber || !prefs.gcashReference) {
-            alert("Please enter your Maya number and transaction reference.");
-            return;
-        }
-    }
+  if (pay && pay.value === "Maya" && (!prefs.gcashNumber || !prefs.gcashReference)) {
+    alert("Please enter your Maya number and transaction reference.");
+    return;
+  }
+  if (pay && pay.value === "Card" && (!prefs.bankName || !prefs.bankAccountName || !prefs.bankAccountNumber)) {
+    alert("Please complete your card details before confirming.");
+    return;
+  }
 
-    if (pay && pay.value === "Card") {
-        if (!prefs.bankName || !prefs.bankAccountName || !prefs.bankAccountNumber) {
-            alert("Please complete your card details before confirming.");
-            return;
-        }
-    }
+  saveCheckoutPrefs(prefs);
 
-    saveCheckoutPrefs(prefs);
+  const buyerEmail = sessionStorage.getItem("currentUser") || "guest@campusshop.com";
+  const paymentDetails = pay && pay.value === "Maya"
+    ? `Maya: ${prefs.gcashNumber}, Ref: ${prefs.gcashReference}`
+    : pay && pay.value === "Card"
+    ? `Card: ${prefs.bankName}, ****${prefs.bankAccountNumber}`
+    : "";
 
-    const total = document.getElementById("total").innerText;
-    const summary = [
-        "Order placed (demo).",
-        "Payment: " + prefs.shopPayment,
-        pay && pay.value === "Maya" ? "Maya ref: " + prefs.gcashReference : "",
-        pay && pay.value === "Card" ? "Card: " + prefs.bankName + " (****" + prefs.bankAccountNumber + ")" : "",
-        "Ship to: " + prefs.chkAddress + ", " + prefs.chkCity + ", " + prefs.chkProvince,
-        "Total: ₱" + total
-    ].filter(Boolean).join("\n");
+  try {
+    const order = await apiPost("/api/orders", {
+      buyer_name: prefs.chkFullName,
+      buyer_email: buyerEmail,
+      buyer_phone: prefs.chkPhone,
+      campus: prefs.chkCampus,
+      address: prefs.chkAddress,
+      city: prefs.chkCity,
+      province: prefs.chkProvince,
+      postal: prefs.chkPostal,
+      payment_method: prefs.shopPayment,
+      payment_details: paymentDetails,
+      items: cart.map(i => ({ name: i.name, price: i.price, qty: i.qty, size: i.size }))
+    });
 
     cart = [];
     updateCart();
-    updateStockDisplay();
+    await loadProductsFromAPI();
 
     const modalInst = bootstrap.Modal.getInstance(document.getElementById("checkoutModal"));
     if (modalInst) modalInst.hide();
-    alert(summary);
+
+    const itemList = order.items.map(i => `${i.product_name} × ${i.quantity}`).join(", ");
+    alert(`Order #${order.id} confirmed!\n\nItems: ${itemList}\nTotal: ₱${order.total.toLocaleString()}\n\nThank you for your purchase!`);
+  } catch (e) {
+    alert("Order failed: " + e.message);
+  }
 });
 
-updateStockDisplay();
+loadProductsFromAPI();
+updateCart();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -243,7 +243,7 @@
         </div>
         
         <div class="admin-links">
-            <a href="stock.html" target="_blank">
+            <a href="stocks.html" target="_blank">
                 <i class="fas fa-boxes"></i> Stock Control
             </a>
                         <a href="index.html" target="_blank">
@@ -264,12 +264,9 @@
 
         function showTab(tab) {
             currentTab = tab;
-            
-
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-  
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tab === 'login' ? 'sign in' : 'sign up'));
+            });
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tab + 'FormContainer').classList.add('active');
         }

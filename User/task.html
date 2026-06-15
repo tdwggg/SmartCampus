@@ -313,18 +313,13 @@ input[type="file"] {
             <div class="mb-3">
               <label><i class="fas fa-align-left me-1"></i>Description</label>
               <textarea class="form-control" id="taskDescription" rows="3" placeholder="Detailed task instructions..." required></textarea>
-              <<form method="POST" action="http://localhost/upload.py" enctype="multipart/form-data">
-                <div class="upload-group">
-                  <input type="file" name="Upload" id="fileInput">
-                  <label for="fileInput" class="file-btn">
-                    <i class="bi bi-paperclip"></i> Choose File
-                  </label>
-                  <span id="file-name">No file chosen</span>
-                </div>
-                <button type="submit" class="submit-btn">
-                  <i class="bi bi-upload"></i> Submit
-                </button>
-              </form>
+              <div class="upload-group mt-3">
+                <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt">
+                <label for="fileInput" class="file-btn">
+                  <i class="fas fa-paperclip"></i> Choose File
+                </label>
+                <span id="file-name">No file chosen</span>
+              </div>
             </div>
             <div class="mb-4">
               <label><i class="fas fa-clock me-1"></i>Deadline</label>

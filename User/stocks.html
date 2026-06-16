@@ -87,11 +87,16 @@
               <img src="${imgPath(p.image)}" class="productThumb" alt="">
               <strong>${p.name}</strong>
             </div></td>
-            <td>₱${p.price.toLocaleString()}</td>
+            <td>
+              ₱${p.price.toLocaleString()}
+              ${p.on_sale && p.sale_price ? `<div class="small text-warning">Sale ₱${p.sale_price.toLocaleString()}</div>` : ""}
+            </td>
             <td>${stockLabel(p)}</td>
             <td><div class="d-flex flex-wrap gap-1">
               <button class="btn btn-success btn-sm" onclick="restockItem(${p.id})" title="Restock"><i class="fas fa-plus"></i></button>
               <button class="btn btn-warning btn-sm" onclick="setStockItem(${p.id})" title="Set stock"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-primary btn-sm" onclick="setPriceItem(${p.id}, ${p.price})" title="Set price"><i class="fas fa-tag"></i></button>
+              <button class="btn btn-secondary btn-sm" onclick="toggleSaleItem(${p.id}, ${p.on_sale ? 0 : 1})" title="Toggle sale"><i class="fas fa-percent"></i></button>
               <button class="btn btn-danger btn-sm" onclick="soldOutItem(${p.id})" title="Sold out"><i class="fas fa-ban"></i></button>
               <button class="btn btn-info btn-sm" onclick="preOrderItem(${p.id})" title="Pre-order"><i class="fas fa-clock"></i></button>
             </div></td>
@@ -113,6 +118,22 @@
       const amount = prompt("Set stock to:", "10");
       if (amount === null) return;
       await apiPut(`/api/products/${id}`, { stock: parseInt(amount, 10) });
+      loadProducts();
+    }
+
+    async function setPriceItem(id, currentPrice) {
+      const amount = prompt("Set new product price:", currentPrice);
+      if (amount === null) return;
+      await apiPut(`/api/products/${id}`, { price: parseInt(amount, 10) });
+      loadProducts();
+    }
+
+    async function toggleSaleItem(id, enableSale) {
+      const salePrice = enableSale === 1
+        ? parseInt(prompt("Enter sale price:", "0"), 10)
+        : 0;
+      if (enableSale === 1 && isNaN(salePrice)) return;
+      await apiPut(`/api/products/${id}`, { sale_price: salePrice, on_sale: enableSale });
       loadProducts();
     }
 
@@ -144,15 +165,27 @@
               <div class="text-end">
                 <strong class="text-success">₱${o.total.toLocaleString()}</strong>
                 <br><small class="text-muted">${new Date(o.created_at).toLocaleString()}</small>
+                <br><span class="badge bg-${o.status === 'delivered' ? 'success' : o.status === 'shipping' ? 'info' : o.status === 'cancelled' ? 'danger' : 'secondary'} text-capitalize">${o.status}</span>
               </div>
             </div>
             <div class="small mb-1"><i class="fas fa-map-marker-alt me-1"></i>${o.campus || ""} — ${o.address || ""}, ${o.city || ""}</div>
             <div class="small mb-2"><i class="fas fa-wallet me-1"></i>${o.payment_method || "N/A"}</div>
-            <div>${o.items.map(i => `<span class="badge bg-primary me-1">${i.product_name} × ${i.quantity}</span>`).join("")}</div>
+            <div class="d-flex flex-wrap gap-1 mb-2">${o.items.map(i => `<span class="badge bg-primary me-1">${i.product_name} × ${i.quantity}</span>`).join("")}</div>
+            <div class="d-flex flex-wrap gap-1">
+              <button class="btn btn-sm btn-outline-info" onclick="updateOrderStatus(${o.id}, 'shipping')">Shipping</button>
+              <button class="btn btn-sm btn-outline-success" onclick="updateOrderStatus(${o.id}, 'delivered')">Delivered</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="updateOrderStatus(${o.id}, 'cancelled')">Cancelled</button>
+            </div>
           </div>`).join("");
       } catch (e) {
         container.innerHTML = `<p class="text-danger mb-0">${e.message}</p>`;
       }
+    }
+
+    async function updateOrderStatus(orderId, status) {
+      if (!confirm(`Set order #${orderId} status to ${status}?`)) return;
+      await apiPut(`/api/orders/${orderId}/status`, { status });
+      loadOrders();
     }
 
     async function initAdmin() {

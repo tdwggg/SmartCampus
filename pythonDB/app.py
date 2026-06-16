@@ -45,6 +45,8 @@ def initDb():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             price INTEGER NOT NULL DEFAULT 0,
+            sale_price INTEGER NOT NULL DEFAULT 0,
+            on_sale INTEGER NOT NULL DEFAULT 0,
             stock INTEGER NOT NULL DEFAULT 0,
             image TEXT NOT NULL DEFAULT ''
         );
@@ -61,6 +63,7 @@ def initDb():
             payment_method TEXT,
             payment_details TEXT,
             total INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
             created_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS order_items (
@@ -105,8 +108,16 @@ def initDb():
     cols = {row[1] for row in conn.execute("PRAGMA table_info(products)").fetchall()}
     if "price" not in cols:
         conn.execute("ALTER TABLE products ADD COLUMN price INTEGER NOT NULL DEFAULT 0")
+    if "sale_price" not in cols:
+        conn.execute("ALTER TABLE products ADD COLUMN sale_price INTEGER NOT NULL DEFAULT 0")
+    if "on_sale" not in cols:
+        conn.execute("ALTER TABLE products ADD COLUMN on_sale INTEGER NOT NULL DEFAULT 0")
     if "image" not in cols:
         conn.execute("ALTER TABLE products ADD COLUMN image TEXT NOT NULL DEFAULT ''")
+
+    orderCols = {row[1] for row in conn.execute("PRAGMA table_info(orders)").fetchall()}
+    if "status" not in orderCols:
+        conn.execute("ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'")
 
     taskCols = {row[1] for row in conn.execute("PRAGMA table_info(tasks)").fetchall()}
     if taskCols and "attachment" not in taskCols:
@@ -155,7 +166,15 @@ def rowToProduct(row):
         product["status"] = "low"
     else:
         product["status"] = "ok"
+    product["sale_price"] = product.get("sale_price") or 0
+    product["on_sale"] = bool(product.get("on_sale"))
     return product
+
+
+def rowToOrder(row):
+    order = dict(row)
+    order["status"] = order.get("status") or "pending"
+    return order
 
 
 def rowToUser(row):
@@ -255,7 +274,19 @@ def updateProduct(productId):
         conn.close()
         return jsonify({"error": "Product not found"}), 404
     stock = data.get("stock", product["stock"])
-    conn.execute("UPDATE products SET stock = ? WHERE id = ?", (stock, productId))
+    price = data.get("price", product["price"])
+    sale_price = data.get("sale_price", product["sale_price"])
+    if sale_price is None:
+        sale_price = product["sale_price"]
+    on_sale = data.get("on_sale", product["on_sale"])
+    if on_sale is None:
+        on_sale = product["on_sale"]
+    on_sale = 1 if bool(on_sale) else 0
+
+    conn.execute(
+        "UPDATE products SET stock = ?, price = ?, sale_price = ?, on_sale = ? WHERE id = ?",
+        (stock, price, sale_price, on_sale, productId),
+    )
     conn.commit()
     updated = conn.execute("SELECT * FROM products WHERE id = ?", (productId,)).fetchone()
     conn.close()
@@ -309,11 +340,32 @@ def getOrders():
         items = conn.execute(
             "SELECT * FROM order_items WHERE order_id = ?", (order["id"],)
         ).fetchall()
-        o = dict(order)
+        o = rowToOrder(order)
         o["items"] = [dict(i) for i in items]
         result.append(o)
     conn.close()
     return jsonify(result)
+
+
+@app.route("/api/orders/<int:orderId>/status", methods=["PUT"])
+def updateOrderStatus(orderId):
+    data = request.json or {}
+    status = (data.get("status") or "").strip().lower()
+    valid_statuses = {"pending", "shipping", "delivered", "cancelled"}
+    if status not in valid_statuses:
+        return jsonify({"error": "Invalid order status"}), 400
+
+    conn = getDb()
+    order = conn.execute("SELECT * FROM orders WHERE id = ?", (orderId,)).fetchone()
+    if not order:
+        conn.close()
+        return jsonify({"error": "Order not found"}), 404
+
+    conn.execute("UPDATE orders SET status = ? WHERE id = ?", (status, orderId))
+    conn.commit()
+    updated = conn.execute("SELECT * FROM orders WHERE id = ?", (orderId,)).fetchone()
+    conn.close()
+    return jsonify(rowToOrder(updated))
 
 
 @app.route("/api/orders", methods=["POST"])
